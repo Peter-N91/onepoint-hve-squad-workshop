@@ -1,0 +1,2 @@
+# Preserve the licensed source logo byte-for-byte across platforms.
+/public/hve-squad-logo.svg -text whitespace=cr-at-eol
