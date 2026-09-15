@@ -1,0 +1,65 @@
+REPORT STUDIO — FICHE VIERGE D’ACCEPTATION ET DE DÉCISION
+Atelier Onepoint — 17 septembre 2026, 09:00–12:30 CEST
+À compléter dans le dépôt participant. Aucun résultat prérempli.
+Ne saisissez pas de données privées dans le guide et ne les publiez pas avec lui.
+
+CONTEXTE
+Date du test :
+Dépôt participant :
+Client Copilot / version :
+Versions réelles HVE Squad / HVE Core ou révisions APM :
+Langue des demandes / mode VS Code choisi (si applicable) :
+Système / application Office / version / ensembles de spécifications :
+Périmètre et éléments du backlog choisis :
+Source de cadrage locale / version / sections :
+
+DÉCISION — DUPLIQUER POUR CHAQUE CHOIX
+Question :
+Fait et référence :
+Hypothèse ou proposition pédagogique :
+Choix possibles :
+Décision / justification :
+Confirmation par / date :
+Impact sur Word et PowerPoint :
+Prochaine preuve / responsable à désigner :
+
+EXPÉRIMENTATION MINIMALE VIABLE (MVE ≠ MVP)
+Incertitude :
+Hypothèse :
+Protocole :
+Mesure et seuil proposés :
+Approbation du seuil :
+État (non exécuté / exécuté / bloqué) :
+Résultat observé :
+Décision après observation :
+
+ACCEPTATION — DUPLIQUER POUR CHAQUE CRITÈRE
+Élément du backlog / critère :
+Jeu nominal ou négatif / période :
+Résultat attendu approuvé :
+Action ou commande exacte :
+Observation :
+État (exécuté réussi / exécuté échoué / simulé / non exécuté / bloqué) :
+Chemin de preuve :
+Écart / prochaine action :
+
+CRITÈRES D’ACCEPTATION PROPOSÉS — À APPROUVER AVANT L’IMPLÉMENTATION
+[ ] La période et le périmètre sont visibles ; les trois valeurs correspondent exactement au jeu synthétique choisi
+[ ] Un tableau Word natif modifiable, pas uniquement une capture d’écran ou un PDF
+[ ] La source synthétique, la date de référence et la version du modèle sont affichées
+[ ] La réinsertion suit la règle choisie ; aucun commentaire utilisateur n’est perdu
+[ ] Période absente ou valeur nulle : un message explicite, jamais zéro ni une donnée inventée
+[ ] L’application Office, sa version et le résultat observé sont consignés ; un test non lancé est marqué non exécuté
+
+COUVERTURE COMPLÉMENTAIRE À VÉRIFIER (cases laissées vierges)
+[ ] Les deux périodes nominales ont été testées.
+[ ] Valeur nulle : message explicite, pas de zéro ni de valeur reprise.
+[ ] Période absente : message explicite, aucune substitution implicite.
+[ ] PowerPoint testé ou critères et travail restant conservés.
+
+BILAN
+Comportement spontané observé :
+Intervention humaine nécessaire :
+Comportement attendu mais absent :
+Éléments non exécutés et blocages :
+Prochaine action approuvée :

@@ -1,11 +1,12 @@
 ONEPOINT — FROM DATA TO REPORTS, WITH HVE SQUAD
 Hands-on workshop: scope and start an Office add-in
-English local companion — 17 September 2026, 09:00–12:30 CEST
+Bilingual English/French local companion — 17 September 2026, 09:00–12:30 CEST
 The final thirty minutes are reserved for discussion.
 Parts 01 and 02: Before the workshop, self-paced, 0 live minutes.
 Complete them before Thursday; they are excluded from the live agenda.
-At 09:00, start Part 03 with planning init and product work, not an opening
-presentation or installation block.
+09:00–09:10: readiness check-in inside Part 03's existing 09:00–10:00 slot.
+From 09:10: planning init, confirmation and product work.
+This is not a full installation session and does not add live minutes.
 
 LIVE AGENDA — 210 MINUTES, INCLUDING BREAK AND PROTECTED DISCUSSION
 09:00–10:00 | 03 Product scope and first release | 60 min
@@ -31,8 +32,9 @@ Optional local browser check (Windows, Edge installed):
 This check uses an isolated Edge profile in artifacts, an ephemeral local
 server and CDP APIs through Node; no new dependencies or shared browser.
 EDGE_PATH can select another compatible Chromium executable.
-It checks subpath hosting, keyboard operation, confirmations, export, reset,
-themes, negative cases, mobile layout and standalone HTML.
+It checks English/French x App/CLI/VS Code, subpath hosting, three-tab keyboard
+operation, confirmations, exact Copy payloads, all modes, export, reset,
+themes, localized negative cases, mobile layout and standalone HTML.
 It also checks the Qubix brand, original logo, separate pre-work,
 Part 03 live start at 09:00 and print/portable timing and embedded logo.
 It does not test the Office add-in. The report and screenshots stay in
@@ -40,7 +42,8 @@ artifacts, excluded from Git. Browser and server close after the check.
 The build produces:
   dist\index.html and assets: Pages-compatible static site.
   dist\onepoint-workshop-portable.html: standalone variant with scripts,
-  styles, original SVG logo, license and four downloads embedded,
+  styles, original SVG logo, license and eight downloads (four per language)
+  embedded, with both languages and all client/mode choices,
   directly openable in a browser with no logo fetch.
 The portable variant is an ordinary local file, not a version intended
 for secure OneDrive/SharePoint preview. Local persistence depends on the
@@ -49,12 +52,19 @@ read the guide. External sources open only on reader action.
 No customer connector or Office outcome is executed.
 
 CONTENT AND FILES
-src\content.ts: separate pre-work and live agenda, complete requests,
-criteria, recovery and sources.
-src\App.tsx: navigation, App/CLI clients, plug-in/APM installation, copy,
+src\content.ts: canonical English pre-work/live agenda, seven unchanged
+English requests, stable lesson/setup IDs, criteria, recovery and sources.
+src\content.fr.ts: authored French parallel content with a typed lesson map;
+IDs, numbering, order and durations inherited from the canonical structure.
+src\locales.ts: compile-time content parity across languages.
+src\ui.ts: keyed authored English/French pairs, including aria and messages.
+src\language.ts: locale types, number locales and structured state errors.
+src\App.tsx: navigation, App/CLI/VS Code clients, installation, copy,
 confirmations, progress, export, reset, themes, focus mode, full printing,
 lab and downloads.
-src\state.ts: isolated Onepoint storage and confirmation dependencies.
+src\state.ts: isolated storage, migration, dependencies, pure prompt renderer
+with deterministic JSON quoting and three-tab keyboard navigation.
+src\downloads.ts: typed per-language downloads and synthetic fixtures.
 src\report.ts: data-contract simulation, without Office APIs.
 src\index.css: Qubix's exact HVE Squad --cp-* light/dark/print tokens,
 including --cp-brand buttons; existing responsive layout and typography.
@@ -67,6 +77,10 @@ public\downloads\report-studio-fixture.json: two periods, three indicators,
 null variant and missing period, with explicit expected behaviors.
 public\downloads\checkpoint-worksheet.txt: blank acceptance and decisions.
 public\downloads\federation-handoff.txt: blank handoff.
+public\downloads-fr\: four authored French equivalents with -fr filenames.
+In the participant project rename the French brief to
+knowledge-docs\report-studio-exercise-brief.txt and the fixture to
+data\report-studio-fixture.json; identifiers and numeric values stay stable.
 scripts\portable.mjs: builds the standalone variant from Vite output,
 without new dependencies. Build stops if the structure is no longer suitable.
 
@@ -93,10 +107,12 @@ Before the workshop (Parts 01–02, self-paced, 0 live minutes):
 2. Install the hve-squad + hve-squad-hve-core pair in the actual client,
    or install the APM reference in the participant repository.
    v0.16.2 is the Qubix rehearsal baseline; verify Onepoint versions.
-3. Choose Squad Coordinator: App list or CLI /agent, not a slash skill.
+3. App/CLI: choose Squad Coordinator through the App list or CLI /agent.
+   VS Code: verify /squad and /squad-federation in GitHub Copilot Chat.
 Live workshop (Parts 03–07):
-4. At 09:00 in Part 03, send planning init; confirm the team; send the
-   product request. Both initialization and product work occupy 09:00–10:00.
+4. At 09:00 in Part 03, check readiness for ten minutes. From 09:10 send
+   planning init; confirm the team; send the product request. All these
+   activities fit within the unchanged 09:00–10:00 slot.
 5. Review BRD, PRD, MVE and backlog; agree the scope.
 6. Choose Squad Federation Coordinator; send promote; confirm.
 7. Send delivery init within the federation; confirm.
@@ -117,13 +133,165 @@ A read error suspends saving and preserves existing data.
 Export before closing or resetting if needed. Exports contain reported
 versions: enter no secrets, private information or scoping documents.
 Reset requires a second choice and affects only this workshop.
-The English correction preserves lesson IDs, setup IDs, schema 1 and the
+The bilingual update preserves lesson IDs, setup IDs, schema 1 and the
 localStorage key. Existing self-reported progress stays compatible.
+Schema-1 exports without locale or mode load with English and interactive
+VS Code defaults, preserving client/install/versions/checks. Supplied invalid
+locale or mode is explicitly rejected, not silently replaced. Read errors
+suspend all saving; changing language does not hide the error or overwrite
+the damaged data. The reset confirmation alone removes this workshop's key.
+The visible English/Français selector saves the preference and updates the
+document language/title without changing client, page or progress.
+Optional ?lang=en / ?lang=fr overrides language on opening; an invalid URL
+value uses English safely and warns, without erasing saved data. Choosing
+a language removes the opening override. On file:// storage availability
+varies. Export contains schema, checks, settings, page and storageKey.
+There is no import UI; to restore manually in the same origin, inspect the
+export, write that JSON into its storageKey via browser developer tools,
+then open the recorded page fragment and reload. Never copy untrusted JSON.
 Moving Parts 01–02 to pre-work preserves their numbers and checkpoint IDs.
 Progress and exports still include all seven parts; checkpoints are not
 live-time accounting. The overview offers unfinished pre-work or Part 03.
 Fixture indicator keys and negative-case IDs are stable machine identifiers;
-their labels, metadata and expected messages are English.
+their labels, metadata and expected messages follow the chosen language.
+Legal notices are preserved verbatim in English, labelled as original text.
+
+VS CODE — VERIFIED v0.16.2 PROMPT-FILE ROUTE
+Prepare the participant repository and knowledge-docs first. Install APM
+and authenticate to GitHub, then at that root:
+  apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
+This supplies .github\prompts\squad\squad.prompt.md and
+.github\prompts\squad\squad-federation.prompt.md. Confirm the slash entries
+in GitHub Copilot Chat before the exercise. Terminal or MCP-only installs
+do not prove that these entries exist. Do not overlay APM and plug-in
+distributions: inspect existing resources, use a clean participant repo and
+an approved dedicated VS Code profile without duplicate plug-in resources,
+or resolve duplicates with approval. Switching tabs installs nothing and
+does not change the saved App/CLI plug-in/APM choice.
+
+VS Code main blocks are COMPLETE COPYABLE commands, not terminal commands:
+  readiness: /squad request="..."
+  planning init: /squad request="..." (no leading init line or init flag)
+  product: /squad request="..."
+  promotion: /squad-federation promote request="..."
+  delivery init: /squad-federation init request="..."
+  implementation: /squad-federation request="..."
+  read-only resume: /squad-federation request="..."
+The ellipses above describe syntax only; use the full guide blocks.
+Quotes, backslashes and newlines are JSON-escaped in request.
+App/CLI keep the original plain requests and /agent/list selection.
+Default interactive omits mode. Explicit autonomous/autopilot selection
+adds mode=autonomous or mode=autopilot ONLY to product and implementation.
+Autonomous uses a bounded auto-validated review loop with escalation;
+autopilot performs research-plan-implement-review, still requiring
+impactful-action approvals and final outcome validation. Untargeted
+federation autopilot can span the meta-selected sub-squads. A real registered
+squad target narrows routing; the guide never invents that name.
+Optional reference: request; federation squad; init profile; single-squad
+pack; discovery quick|standard|deep|skip where applicable; tier fast|default;
+owner as an existing roster member. These hints are omitted by default.
+No mode=interactive, mode=init, mode=promote or cost-ceiling is supported here.
+Modes do not unlock self-report Copy gates or grant any approval.
+The guide has been browser-simulated, not dispatched in an actual VS Code
+host. Verify installed prompt discovery and real behavior separately.
+
+AUTHORITATIVE SOURCES / SOURCES DE RÉFÉRENCE
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad.prompt.md
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad-federation.prompt.md
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/docs/usage.html
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/apm.yml
+https://microsoft.github.io/apm/quickstart/
+https://peter-n91.github.io/hve-squad-plugin/install-cli.html
+https://peter-n91.github.io/hve-squad-plugin/install-desktop.html
+
+FRANÇAIS — UTILISATION LOCALE
+Choisissez Français dans le sélecteur visible. L’anglais est la langue par
+défaut. Le choix traduit les leçons, demandes, menus, textes accessibles,
+messages, erreurs, supports, données synthétiques et impression.
+Les mentions légales originales restent à l’identique en anglais.
+La langue, le client, la méthode d’installation, le mode, les versions et
+les cases restent dans le navigateur ; aucun envoi à l’animateur.
+Changer de langue conserve la page, le client, les cases et les erreurs.
+Les anciens états de schéma 1 conservent tous leurs champs et utilisent
+l’anglais et le mode interactif par défaut. Une langue ou un mode enregistré
+invalide provoque une erreur explicite et suspend l’enregistrement.
+?lang=en ou ?lang=fr impose la langue à l’ouverture. Une valeur d’URL
+invalide utilise l’anglais et avertit sans effacer la progression.
+Exportez avant de fermer si la persistance est incertaine. L’export contient
+le schéma, les cases, paramètres, page et clé de stockage ; aucun import
+automatique n’est fourni. Une restauration manuelle consiste à inspecter
+le JSON, l’enregistrer dans sa clé storageKey via les outils du navigateur
+sur la même origine, puis rouvrir la page indiquée et recharger.
+
+DÉMARRAGE ET VALIDATION (PowerShell à la racine de ce guide)
+Node 24+ et npm requis :
+  npm ci
+  npm run dev -- --host 127.0.0.1
+Ouvrez l’adresse locale réellement affichée.
+  npm run lint
+  npm test
+  npm run build
+  node scripts\browser-check.mjs
+Le contrôle navigateur utilise Edge isolé, jamais le navigateur partagé.
+Les captures et rapports restent dans artifacts, exclu de Git.
+dist\onepoint-workshop-portable.html contient les deux langues, les huit
+supports et le logo, sans requête applicative externe. Ce fichier local
+n’est pas destiné à l’aperçu sécurisé OneDrive/SharePoint. Le stockage
+file:// dépend du navigateur ; privilégiez l’export.
+
+PROGRAMME — PRÉPARATION HORS DIRECT, 210 MINUTES EN DIRECT
+Parties 01/02 : avant jeudi, à votre rythme, 0 minute en direct.
+09:00–10:00 : partie 03, périmètre produit et première version.
+  09:00–09:10 : vérifier dépôt, lecture du cadrage, client et blocages.
+  Dès 09:10 : initialiser, confirmer, demander le travail produit et revoir.
+10:00–10:30 : fédération et décisions techniques.
+10:30–10:40 : pause.
+10:40–11:45 : premier incrément et preuves.
+11:45–12:00 : revue et reprise autonome.
+12:00–12:30 : discussion protégée, jamais du temps de développement.
+Si la préparation bloque, formez un binôme dans un environnement approuvé ;
+n’ajoutez pas d’installation complète en direct.
+
+VS CODE — COMMANDES GITHUB COPILOT CHAT
+Préparez d’abord le dépôt participant et knowledge-docs. Installez APM et
+authentifiez-vous sur GitHub, puis exécutez à la racine de ce dépôt :
+  apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
+Vérifiez les fichiers .github\prompts\squad\ et les entrées /squad et
+/squad-federation dans GitHub Copilot Chat. Une installation terminal ou
+MCP seule ne prouve pas leur disponibilité. Ne superposez pas les
+distributions : inspectez les ressources, utilisez un dépôt propre et un
+profil VS Code approuvé sans plug-ins en double, ou résolvez-les avec accord.
+L’onglet ne change pas la préférence plug-in/APM de l’App/CLI.
+Les blocs principaux sont des commandes complètes, à coller dans Chat :
+/squad request="..." pour vérification, initialisation de planification et
+travail produit ; /squad-federation promote request="..." pour promotion ;
+/squad-federation init request="..." pour réalisation ;
+/squad-federation request="..." pour implémentation et reprise.
+Ces points de suspension expliquent la syntaxe ; copiez le bloc complet du
+guide. L’initialisation d’équipe unique n’a pas de drapeau init autonome.
+Le mode interactif omet mode. autonomous et autopilot sont des choix
+explicites, appliqués seulement au produit et à l’implémentation.
+Autonomous : boucle de revue bornée et auto-validée, escalade obligatoire.
+Autopilot : recherche-planification-implémentation-revue, avec approbations
+d’actions à impact et validation finale. Sans cible squad réelle enregistrée,
+la fédération peut coordonner plusieurs sous-équipes sélectionnées.
+Les paramètres facultatifs sont documentés dans le guide et omis des
+demandes : squad (fédération), profile (initialisation), pack (équipe unique),
+discovery, tier, owner (membre existant). N’inventez pas de nom.
+Les cases déclarent vos vérifications ; elles ne créent rien et ne donnent
+aucun consentement. Le mode ne débloque aucune étape.
+La simulation du guide ne prouve pas l’exécution réelle dans VS Code.
+
+CONFIDENTIALITÉ ET LIMITES
+Ce dépôt est le guide, pas le projet participant. Les supports sont
+synthétiques ou vierges. Aucun cadrage privé, diagramme client, secret,
+document Office, identité, adresse de messagerie ou accès tenant ici.
+Word et PowerPoint restent les cibles ; Word d’abord, les seuils et la
+convention de réinsertion sont des propositions à approuver.
+Le laboratoire n’exécute aucune intégration Office, Fabric ou Power BI.
+La publication Pages est manuelle et nécessite une autorisation distincte.
+Le logo et les couleurs Qubix ne changent pas. .gitattributes conserve
+-text whitespace=cr-at-eol pour préserver les octets SVG entre plateformes.
 
 PRIVACY AND REPOSITORY STATE
 This repository is the GUIDE, not the participant project. No Office

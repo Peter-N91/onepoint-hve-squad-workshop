@@ -1,0 +1,41 @@
+REPORT STUDIO — FICHE DE TRANSMISSION VIERGE
+Support d’exercice, pas un état d’équipe préinitialisé.
+Conservez la fiche complétée dans le projet participant ; ne la publiez pas avec le guide.
+
+Date / auteur :
+Dépôt participant :
+Conversation ou contexte à reprendre :
+Client / langue / mode choisi :
+Équipe de planification réellement créée / chemin :
+Confirmation d’initialisation :
+Promotion confirmée / chemins et livrables préservés :
+Équipe de réalisation réellement créée / chemin :
+Confirmation d’initialisation :
+
+PÉRIMÈTRE CONVENU
+BRD revu :
+PRD revu :
+Backlog / éléments du premier incrément :
+Décisions approuvées / questions ouvertes :
+MVE / seuil / état réel :
+Règle de préservation des ajouts manuels :
+Cibles Word et PowerPoint / périmètre reporté :
+
+ÉTAT RÉEL
+Changements produits :
+Tests exécutés et preuves :
+Tests uniquement simulés :
+Tests non exécutés :
+Blocages / environnement / versions :
+Écarts connus :
+Futur connecteur Fabric / Power BI et validations restantes :
+
+REPRISE
+Prochaine action utile du backlog :
+Dépendances :
+Responsable à désigner :
+Décision nécessaire avant de poursuivre :
+Éléments à ne pas écraser :
+
+Rappel : reprendre le même projet ; ne pas réinitialiser les équipes.
+La progression cochée dans le navigateur n’est pas une preuve du projet.

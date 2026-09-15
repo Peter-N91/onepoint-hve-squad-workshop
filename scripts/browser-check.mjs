@@ -5,7 +5,9 @@ import { mkdir, readFile, writeFile, readdir, rm } from 'node:fs/promises'
 import { resolve, extname, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { agenda, prework, prompts } from '../src/content.ts'
-import { storageKey } from '../src/state.ts'
+import { content } from '../src/locales.ts'
+import { translator } from '../src/ui.ts'
+import { defaults, renderPrompt, storageKey } from '../src/state.ts'
 
 // Independent local check through Edge/CDP, without touching the shared browser.
 const edge = process.env.EDGE_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
@@ -258,6 +260,249 @@ try {
   await call('Emulation.setEmulatedMedia', { media: '' })
   assert.ok(requests.slice(portableRequestStart).filter(request => /^(file|https?):/.test(request)).every(request => request.includes('onepoint-workshop-portable.html')))
   results.push('Portable loads no separate files or network assets')
+
+  // Full locale/client matrix, with real rendered Copy handlers and isolated downloads.
+  const bilingualDownloads = resolve(output, 'qa-bilingual-downloads')
+  await rm(bilingualDownloads, { recursive: true, force: true })
+  await mkdir(bilingualDownloads, { recursive: true })
+  await call('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: bilingualDownloads })
+  await call('Page.navigate', { url: url + '?scoutTheme=light#overview' })
+  await waitFor(() => evaluate(`!!document.querySelector('.hero')`), 'bilingual hosted guide')
+  const changeSelect = async (selector, value) => {
+    await evaluate(`(()=>{const el=document.querySelector(${JSON.stringify(selector)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('change',{bubbles:true}))})()`)
+    await sleep(100)
+  }
+  const setLanguage = locale => changeSelect('[data-testid="language"]', locale)
+  const setMode = mode => changeSelect('[data-testid="business-mode"]', mode)
+  const screenshot = async name => writeFile(resolve(output, name + '.png'), Buffer.from((await call('Page.captureScreenshot', { format: 'png' })).data, 'base64'))
+  const seed = async settings => {
+    await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(JSON.stringify({ schema: 1, checked: [], settings }))})`)
+    await call('Page.reload')
+    await waitFor(() => evaluate(`!!document.querySelector('[data-testid="language"]')`), 'load matrix settings')
+    await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copied=text}}})`)
+  }
+  const assertCopy = async (label, selector, prompt, settings) => {
+    const expected = renderPrompt(prompt, settings)
+    assert.equal(await evaluate(`${selector}.querySelector('pre').textContent`), expected, label + ' visible code')
+    await click(`${selector}.querySelector('.prompt-toolbar button')`)
+    assert.equal(await evaluate('window.__copied'), expected, label + ' clipboard')
+    results.push(label + ' — exact visible and Copy payload')
+  }
+  const visibleArticle = `document.querySelector('article:not(.print-only)')`
+  const testPages = ['overview', 'start', 'prepare', 'product', 'federation', 'implementation', 'resume', 'discussion', 'lab', 'resources']
+  const variants = [
+    ['app', 'interactive'], ['cli', 'interactive'], ['vscode', 'interactive'],
+    ['vscode', 'autonomous'], ['vscode', 'autopilot'],
+  ]
+  for (const locale of ['en', 'fr']) {
+    const c = content[locale]
+    const t = translator(locale)
+    for (const [experience, mode] of variants) {
+      const settings = { ...defaults, locale, experience, mode, clientVersion: 'QA version', coreVersion: 'QA core', squadVersion: 'QA squad', officeVersion: 'Not executed' }
+      const tag = `${locale}/${experience}/${mode}`
+      await seed(settings)
+      await check(`${tag} document metadata and three accessible tabs`, `document.documentElement.lang===${JSON.stringify(locale)} && document.title===${JSON.stringify('onepoint | ' + t('title'))} && document.querySelectorAll('[role="tab"]').length===3 && document.querySelectorAll('[role="tab"][tabindex="0"]').length===1 && document.getElementById('experience-${experience}').getAttribute('aria-selected')==='true' && document.querySelector('[role="tabpanel"]').getAttribute('aria-labelledby')==='experience-${experience}'`)
+      if (experience === 'vscode') {
+        for (const [key, expected] of [['End', 'vscode'], ['ArrowRight', 'app'], ['ArrowLeft', 'vscode'], ['Home', 'app'], ['ArrowRight', 'cli'], ['ArrowRight', 'vscode']]) {
+          await evaluate(`document.querySelector('[role="tab"][aria-selected="true"]').dispatchEvent(new KeyboardEvent('keydown',{key:${JSON.stringify(key)},bubbles:true}))`)
+          await sleep(60)
+          await check(`${tag} keyboard ${key} → ${expected}`, `document.activeElement.id==='experience-${expected}' && document.querySelectorAll('[role="tab"][tabindex="0"]').length===1 && document.getElementById('experience-${expected}').getAttribute('aria-selected')==='true'`)
+        }
+        await go('implementation')
+        await check(`${tag} chosen mode cannot unlock implementation`, `${visibleLesson}.querySelector('.phase-launch button').disabled && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.length===0`)
+      }
+      for (const hash of testPages) {
+        await go(hash)
+        const title = hash === 'overview' ? t('title') : hash === 'lab' ? 'Report Studio' : hash === 'resources' ? t('resources') : c.lessons.find(l => l.id === hash).title
+        await check(`${tag} localized page ${hash}`, `document.querySelector('h1').textContent===${JSON.stringify(title)} && document.documentElement.lang===${JSON.stringify(locale)}`)
+      }
+      await go('prepare')
+      await assertCopy(`${tag} readiness`, `${visibleLesson}.querySelector('.exercise-list .prompt-block')`, c.lessons.find(l => l.id === 'prepare').steps.at(-1).prompt, settings)
+      await assertCopy(`${tag} repository shell`, `${visibleLesson}.querySelector('.before-install .prompt-block')`, c.repositorySetup, settings)
+      if (experience === 'vscode') {
+        await assertCopy(`${tag} verified APM installation`, `${visibleLesson}.querySelector('.vscode-install .prompt-block')`, c.installation.apm, settings)
+        await check(`${tag} VS Code does not silently switch plugin preference`, `JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.install==='plugin' && !${visibleLesson}.querySelector('.install-panel .segmented') && ${visibleLesson}.querySelector('.vscode-install').textContent.includes('.github/prompts/squad/squad.prompt.md')`)
+      } else {
+        if (experience === 'app') await check(`${tag} App pair retained`, `${visibleLesson}.querySelector('.app-install').textContent.includes('hve-squad-hve-core')`)
+        else await assertCopy(`${tag} CLI pair retained`, `${visibleLesson}.querySelector('.install-panel .prompt-block')`, c.installation.plugin, settings)
+        await click(`${visibleLesson}.querySelectorAll('.install-panel .segmented button')[1]`)
+        await assertCopy(`${tag} APM preference`, `${visibleLesson}.querySelector('.install-panel .prompt-block')`, c.installation.apm, settings)
+        await click(`document.getElementById('experience-vscode')`)
+        await click(`document.getElementById('experience-${experience}')`)
+        await check(`${tag} APM choice survives VS Code roundtrip`, `JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.install==='apm'`)
+      }
+      await go('product')
+      const product = c.lessons.find(l => l.id === 'product')
+      await check(`${tag} readiness check stays inside product hour`, `${visibleLesson}.textContent.includes('09:00–09:10') && ${visibleLesson}.querySelector('.eyebrow').textContent.includes('09:00–10:00')`)
+      await assertCopy(`${tag} planning initialization`, `${visibleLesson}.querySelector('[data-setup-id="planning-team"] .prompt-block')`, product.setup[0].request, settings)
+      await check(`${tag} product blocked before self-report`, `${visibleLesson}.querySelector('.phase-launch button').disabled`)
+      if (experience === 'vscode') {
+        await setMode(mode === 'autopilot' ? 'autonomous' : 'autopilot')
+        await check(`${tag} mode change still blocked`, `${visibleLesson}.querySelector('.phase-launch button').disabled`)
+        await setMode(mode)
+      }
+      await click(`${visibleLesson}.querySelector('[data-setup-id="planning-team"] input')`)
+      await click(`${visibleLesson}.querySelector('[data-check-id="product-0"]')`)
+      await assertCopy(`${tag} product`, `${visibleLesson}.querySelector('.phase-launch .prompt-block')`, product.launch, settings)
+      const beforeLanguage = await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)}))`)
+      await setLanguage(locale === 'en' ? 'fr' : 'en')
+      await check(`${tag} language preserves page, client, mode, progress and status`, `location.hash==='#product' && document.getElementById('experience-${experience}').getAttribute('aria-selected')==='true' && JSON.stringify(JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked)===${JSON.stringify(JSON.stringify(beforeLanguage.checked))} && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.mode===${JSON.stringify(mode)} && document.querySelector('.status').textContent===${JSON.stringify(translator(locale === 'en' ? 'fr' : 'en')('copied'))}`)
+      await setLanguage(locale)
+      await go('federation')
+      const federation = c.lessons.find(l => l.id === 'federation')
+      await assertCopy(`${tag} promotion`, `${visibleLesson}.querySelector('[data-setup-id="promote"] .prompt-block')`, federation.setup[0].request, settings)
+      await check(`${tag} delivery blocked before promotion`, `${visibleLesson}.querySelector('[data-setup-id="delivery-team"] button').disabled && ${visibleLesson}.querySelector('[data-setup-id="delivery-team"] input').disabled`)
+      await click(`${visibleLesson}.querySelector('[data-setup-id="promote"] input')`)
+      await assertCopy(`${tag} delivery initialization`, `${visibleLesson}.querySelector('[data-setup-id="delivery-team"] .prompt-block')`, federation.setup[1].request, settings)
+      await click(`${visibleLesson}.querySelector('[data-setup-id="delivery-team"] input')`)
+      await go('implementation')
+      await assertCopy(`${tag} implementation`, `${visibleLesson}.querySelector('.phase-launch .prompt-block')`, c.lessons.find(l => l.id === 'implementation').launch, settings)
+      await go('resume')
+      await assertCopy(`${tag} read-only resumption`, `${visibleLesson}.querySelector('.exercise-list .prompt-block')`, c.lessons.find(l => l.id === 'resume').steps[0].prompt, settings)
+      await go('product')
+      await click(`${visibleLesson}.querySelector('[data-setup-id="planning-team"] input')`)
+      await go('implementation')
+      await check(`${tag} inherited confirmations revoked, business checks retained`, `${visibleLesson}.querySelector('.phase-launch button').disabled && JSON.stringify(JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked)==='["product-0"]'`)
+      for (const width of [390, 320]) {
+        await call('Emulation.setDeviceMetricsOverride', { width, height: 844, deviceScaleFactor: 1, mobile: true })
+        for (const hash of testPages) {
+          await go(hash)
+          await check(`${tag} ${width}px no overflow — ${hash}`, `document.documentElement.scrollWidth<=innerWidth`)
+        }
+      }
+      if (experience === 'vscode' && mode === 'autopilot') {
+        await go('product')
+        await screenshot(`onepoint-${locale}-vscode-320`)
+      }
+      await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+      for (const theme of ['light', 'dark']) {
+        if (await evaluate('document.documentElement.dataset.theme') !== theme) await click(`document.querySelector('.header-actions button[aria-label]')`)
+        await call('Emulation.setEmulatedMedia', { media: 'print' })
+        await check(`${tag} ${theme} print contains localized lessons, sources, logo and Qubix palette`, `document.querySelectorAll('.lesson.print-only').length===7 && [...document.querySelectorAll('.lesson.print-only')].every(el=>getComputedStyle(el).display!=='none') && document.querySelector('.print-sources h2').textContent===${JSON.stringify(t('sourcesMaterials'))} && document.querySelector('.print-heading img').naturalWidth===64 && getComputedStyle(document.body).backgroundColor==='rgb(255, 255, 255)' && getComputedStyle(document.documentElement).getPropertyValue('--cp-accent').trim()==='#08764f'`)
+        assert.equal(await evaluate(`document.querySelector('.lesson.print-only .big-number').textContent`), '01')
+        assert.equal(await evaluate(`document.querySelectorAll('.lesson.print-only')[2].querySelector('.phase-launch pre').textContent`), renderPrompt(product.launch, settings), tag + ' print command')
+        if (experience === 'vscode' && mode === 'autopilot') { await evaluate('scrollTo(0,0)'); await screenshot(`onepoint-${locale}-print-${theme}`) }
+        await call('Emulation.setEmulatedMedia', { media: '' })
+      }
+      if (experience === 'vscode' && mode === 'autopilot') {
+        await go('overview')
+        await screenshot(`onepoint-${locale}-vscode-desktop`)
+        await go('product')
+        await evaluate(`${visibleLesson}.querySelector('.phase-launch').scrollIntoView({block:'start',behavior:'instant'})`)
+        await sleep(100)
+        await screenshot(`onepoint-${locale}-vscode-command`)
+      }
+    }
+    await go('lab')
+    await changeSelect('article:not(.print-only) .fixture-select select', '2026-07')
+    await check(`${locale} number formatting and labels`, `${visibleArticle}.querySelector('tbody').textContent.includes(${JSON.stringify(locale === 'fr' ? '1\u202f280' : '1,280')}) && ${visibleArticle}.querySelector('tbody').textContent.includes(${JSON.stringify(locale === 'fr' ? '4,2' : '4.2')})`)
+    await changeSelect('article:not(.print-only) .fixture-select select', 'valeur-nulle')
+    await check(`${locale} localized null error`, `${visibleArticle}.querySelector('.report-preview').textContent.includes(${JSON.stringify(locale === 'fr' ? 'Donnée indisponible: Délai moyen' : 'Data unavailable: Average turnaround')}) && ${visibleArticle}.querySelector('tbody tr:nth-child(2) td').textContent===${JSON.stringify(t('unavailable'))}`)
+    await setLanguage(locale === 'en' ? 'fr' : 'en')
+    await check(`${locale} changing language retains negative scenario`, `${visibleArticle}.querySelector('.fixture-select select').value==='valeur-nulle'`)
+    await setLanguage(locale)
+    await changeSelect('article:not(.print-only) .fixture-select select', 'periode-absente')
+    await check(`${locale} missing period never substitutes`, `!${visibleArticle}.querySelector('table') && ${visibleArticle}.querySelector('.report-preview').textContent.includes(${JSON.stringify(locale === 'fr' ? 'Période indisponible: 2026-09' : 'Period unavailable: 2026-09')})`)
+    await go('resources')
+    const filenames = ['report-studio-exercise-brief', 'report-studio-fixture', 'checkpoint-worksheet', 'federation-handoff'].map((base, i) => `${base}${locale === 'fr' ? '-fr' : ''}.${i === 1 ? 'json' : 'txt'}`)
+    for (const filename of filenames) await click(`${visibleArticle}.querySelector('[data-download="${filename}"]')`)
+    await waitFor(async () => (await readdir(bilingualDownloads)).filter(name => /\.(txt|json)$/.test(name)).length >= (locale === 'fr' ? 8 : 4), locale + ' material downloads')
+    for (const filename of filenames) assert.equal(await readFile(resolve(bilingualDownloads, filename), 'utf8'), await readFile(resolve('public', locale === 'fr' ? 'downloads-fr' : 'downloads', filename), 'utf8'))
+    results.push(locale + ' four localized downloads byte-identical to source')
+    await click(findButton(t('export')))
+    const progressName = `onepoint-progress-2026-09-17${locale === 'fr' ? '-fr' : ''}.json`
+    await waitFor(async () => (await readdir(bilingualDownloads)).includes(progressName), locale + ' exported metadata')
+    const exported = JSON.parse(await readFile(resolve(bilingualDownloads, progressName), 'utf8'))
+    assert.equal(exported.settings.locale, locale)
+    assert.equal(exported.settings.mode, 'autopilot')
+    assert.equal(exported.settings.experience, 'vscode')
+    assert.equal(exported.storageKey, storageKey)
+    assert.equal(exported.page, 'resources')
+    assert.deepEqual(exported.checked, ['product-0'])
+    results.push(locale + ' export contains restore metadata, selected language/client/mode and unchanged IDs')
+    await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('QA blocked')}}})`)
+    await go('resume')
+    await click(`${visibleLesson}.querySelector('.prompt-toolbar button')`)
+    await check(`${locale} localized clipboard error`, `document.querySelector('.status').textContent===${JSON.stringify(t('clipboardError'))}`)
+    await go('invalid-page')
+    await check(`${locale} localized missing page`, `document.querySelector('h1').textContent===${JSON.stringify(t('notFound'))}`)
+  }
+  // Invalid supplied settings must survive language changes and checkpoint actions unchanged.
+  for (const [key, value] of [['locale', 'invalid'], ['mode', 'interactive-invalid']]) {
+    const raw = JSON.stringify({ schema: 1, checked: ['start-0'], settings: { ...defaults, [key]: value } })
+    await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(raw)})`)
+    await call('Page.reload')
+    await waitFor(() => evaluate(`!!document.querySelector('[role="alert"]')`), key + ' explicit saved-state error')
+    await check(`${key} error identifies invalid supplied setting`, `document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(key === 'locale' ? 'Unknown saved language' : 'Unknown saved VS Code mode')})`)
+    await setLanguage('fr')
+    await go('start')
+    await click(`${visibleLesson}.querySelector('.check-row input')`)
+    await check(`${key} error remains localized and bad data preserved`, `localStorage.getItem(${JSON.stringify(storageKey)})===${JSON.stringify(raw)} && document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(key === 'locale' ? 'Langue enregistrée inconnue' : 'Mode VS Code enregistré inconnu')})`)
+  }
+  await seed({ ...defaults, locale: 'fr' })
+  await evaluate(`Storage.prototype.setItem=function(){throw new DOMException('QA quota','QuotaExceededError')}`)
+  await go('start')
+  await click(`${visibleLesson}.querySelector('.check-row input')`)
+  await check('French storage-write failure remains explicit', `document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(translator('fr')('saveError'))})`)
+  await setLanguage('en')
+  await check('Language translates rather than clears storage failure', `document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(translator('en')('saveError'))})`)
+  await go('resources')
+  await click(findButton('Reset local data'))
+  await evaluate(`Storage.prototype.removeItem=function(){throw new DOMException('QA blocked','SecurityError')}`)
+  await click(findButton('Reset this workshop'))
+  await check('Reset failure preserves existing error and data', `document.querySelector('.status').textContent===${JSON.stringify(translator('en')('resetError'))} && !!document.querySelector('[role="alert"]')`)
+  await setLanguage('fr')
+  await check('French reset failure status', `document.querySelector('.status').textContent===${JSON.stringify(translator('fr')('resetError'))}`)
+  await call('Page.reload')
+  await waitFor(() => evaluate(`!!document.querySelector('[data-testid="language"]')`), 'restore native storage methods')
+  const oldSettings = { experience: 'app', install: 'apm', clientVersion: 'old-client', squadVersion: 'old-squad', coreVersion: 'old-core', officeVersion: 'old-office' }
+  await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(JSON.stringify({ schema: 1, checked: ['start-0', 'prepare-3'], settings: oldSettings }))})`)
+  await call('Page.navigate', { url: url + '?lang=bad#prepare' })
+  await waitFor(() => evaluate(`!!${visibleLesson}`), 'safe invalid URL language')
+  await check('Invalid URL defaults English without erasing old state', `document.documentElement.lang==='en' && document.querySelector('.notice').textContent.includes('Unknown URL language') && document.getElementById('experience-app').getAttribute('aria-selected')==='true' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.clientVersion==='old-client' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.includes('prepare-3')`)
+  await setLanguage('fr')
+  await check('Choosing a valid language clears the stale URL warning immediately', `document.documentElement.lang==='fr' && !location.search.includes('lang=') && ![...document.querySelectorAll('.notice')].some(node=>node.textContent.includes('Langue d’URL inconnue'))`)
+  await call('Page.reload')
+  await waitFor(() => evaluate(`!!${visibleLesson}`), 'saved locale after URL override removed')
+  await check('Migrated state and French preference persist after reload', `document.documentElement.lang==='fr' && !location.search.includes('lang=') && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.mode==='interactive' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.install==='apm' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.length===2`)
+  const denyRead = await call('Page.addScriptToEvaluateOnNewDocument', { source: `Storage.prototype.getItem=function(){throw new DOMException('QA blocked','SecurityError')}` })
+  await call('Page.navigate', { url: url + '?lang=fr#resources' })
+  await waitFor(() => evaluate(`!!document.querySelector('[role="alert"]')`), 'denied storage read')
+  await check('French browser read denial is visible', `document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(translator('fr')('loadError'))})`)
+  await call('Page.removeScriptToEvaluateOnNewDocument', { identifier: denyRead.identifier })
+
+  // Portable file must include both languages and all eight file payloads without requests.
+  const standaloneDownloads = resolve(output, 'qa-portable-downloads')
+  await rm(standaloneDownloads, { recursive: true, force: true })
+  await mkdir(standaloneDownloads, { recursive: true })
+  await call('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: standaloneDownloads })
+  const standaloneStart = requests.length
+  for (const locale of ['en', 'fr']) {
+    await call('Page.navigate', { url: pathToFileURL(resolve(root, 'onepoint-workshop-portable.html')).href + `?lang=${locale}&scoutTheme=light#overview` })
+    await waitFor(() => evaluate(`!!document.querySelector('.hero')`), locale + ' standalone opened')
+    await check(`${locale} standalone document and embedded logo`, `document.documentElement.lang===${JSON.stringify(locale)} && document.querySelector('.hero h1').textContent===${JSON.stringify(translator(locale)('title'))} && document.querySelector('.brand img').src.startsWith('data:image/svg+xml;base64,') && document.querySelectorAll('script[src],link[rel="stylesheet"]').length===0`)
+    await click(`document.getElementById('experience-vscode')`)
+    await setMode('autonomous')
+    await go('product')
+    assert.equal(await evaluate(`${visibleLesson}.querySelector('.phase-launch pre').textContent`), renderPrompt(content[locale].lessons.find(l => l.id === 'product').launch, { ...defaults, locale, experience: 'vscode', mode: 'autonomous' }))
+    results.push(locale + ' standalone VS Code autonomous prompt exact')
+    await go('lab')
+    await changeSelect('article:not(.print-only) .fixture-select select', 'valeur-nulle')
+    await check(`${locale} standalone localized fixture error`, `${visibleArticle}.querySelector('.report-preview').textContent.includes(${JSON.stringify(locale === 'fr' ? 'Donnée indisponible: Délai moyen' : 'Data unavailable: Average turnaround')})`)
+    await go('resources')
+    const names = ['report-studio-exercise-brief', 'report-studio-fixture', 'checkpoint-worksheet', 'federation-handoff'].map((base, i) => `${base}${locale === 'fr' ? '-fr' : ''}.${i === 1 ? 'json' : 'txt'}`)
+    for (const name of names) await click(`${visibleArticle}.querySelector('[data-download="${name}"]')`)
+    await waitFor(async () => (await readdir(standaloneDownloads)).length >= (locale === 'fr' ? 8 : 4), locale + ' standalone downloads')
+    for (const name of names) assert.equal(await readFile(resolve(standaloneDownloads, name), 'utf8'), await readFile(resolve('public', locale === 'fr' ? 'downloads-fr' : 'downloads', name), 'utf8'))
+    results.push(locale + ' standalone four localized downloads match source')
+    await call('Emulation.setEmulatedMedia', { media: 'print' })
+    await check(`${locale} standalone print localized`, `document.querySelector('.print-sources h2').textContent===${JSON.stringify(translator(locale)('sourcesMaterials'))} && document.querySelector('.print-heading img').naturalWidth===64`)
+    await call('Emulation.setEmulatedMedia', { media: '' })
+    await go('overview')
+    await screenshot(`onepoint-${locale}-portable`)
+  }
+  assert.ok(requests.slice(standaloneStart).filter(request => /^(file|https?):/.test(request)).every(request => request.includes('onepoint-workshop-portable.html')))
+  results.push('Both standalone languages, modes and eight downloads use no external app requests')
   assert.deepEqual(exceptions, [])
   assert.ok(requests.filter(request => /^https?:/.test(request)).every(request => request.startsWith(origin + '/')))
   results.push('No JavaScript exceptions or external application requests')

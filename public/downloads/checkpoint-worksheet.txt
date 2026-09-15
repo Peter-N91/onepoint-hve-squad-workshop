@@ -8,6 +8,7 @@ Test date:
 Participant repository:
 Copilot client / version:
 Actual HVE Squad / HVE Core versions or APM revisions:
+Request language / chosen VS Code mode (if applicable):
 OS / Office host / version / requirement sets:
 Selected scope and backlog items:
 Local scoping source / version / sections:

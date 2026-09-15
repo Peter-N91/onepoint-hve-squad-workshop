@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "exercise": "Report Studio",
+  "notice": "Données entièrement synthétiques, créées pour l’exercice. Aucun résultat ni exigence client n’est attesté.",
+  "status": "Proposition pédagogique à approuver",
+  "scope": "Portefeuille Démonstration synthétique",
+  "source": "Jeu synthétique local Report Studio",
+  "referenceDate": "2026-09-01",
+  "modelVersion": "exercise-1.0",
+  "indicators": [
+    { "id": "dossiersTraites", "label": "Dossiers traités", "unit": "dossiers" },
+    { "id": "delaiMoyenJours", "label": "Délai moyen", "unit": "jours" },
+    { "id": "tauxConformitePct", "label": "Taux de conformité", "unit": "%" }
+  ],
+  "periods": [
+    { "id": "2026-07", "label": "Juillet 2026", "values": { "dossiersTraites": 1280, "delaiMoyenJours": 4.2, "tauxConformitePct": 96.5 } },
+    { "id": "2026-08", "label": "Août 2026", "values": { "dossiersTraites": 1345, "delaiMoyenJours": 3.8, "tauxConformitePct": 97.2 } }
+  ],
+  "negativeCases": [
+    {
+      "id": "valeur-nulle",
+      "label": "Août — délai manquant",
+      "periodId": "2026-08",
+      "overrideValues": { "delaiMoyenJours": null },
+      "expected": "Afficher « Donnée indisponible: Délai moyen ». Ne pas remplacer par zéro, réutiliser juillet ni inventer de valeur. Bloquer l’insertion de ce rapport incomplet selon la convention d’exercice à approuver."
+    },
+    {
+      "id": "periode-absente",
+      "label": "Septembre — période absente",
+      "periodId": "2026-09",
+      "expected": "Afficher « Période indisponible: 2026-09 ». Ne pas choisir août par défaut, ne rien insérer et préserver le document existant."
+    }
+  ],
+  "reinsertion": "Décider de la règle avant le test. Zéro commentaire manuel perdu est un seuil proposé à approuver, pas un résultat déjà observé.",
+  "officeValidation": "Non exécutée pendant la préparation ; le guide simule uniquement l’aperçu local."
+}

@@ -5,6 +5,7 @@ Keep the completed worksheet in the participant project; do not publish it with 
 Date / author:
 Participant repository:
 Conversation or context to resume:
+Client / language / chosen mode:
 Planning team actually created / path:
 Initialization confirmation:
 Confirmed promotion / preserved paths and artifacts:

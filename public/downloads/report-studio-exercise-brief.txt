@@ -22,11 +22,31 @@ LIVE AGENDA — 17 SEPTEMBER 2026, CEST — 210 MINUTES
 10:40–11:45 | 05 First slice and evidence | 65 min
 11:45–12:00 | 06 Review and independent resumption | 15 min
 12:00–12:30 | 07 Discussion and next steps | 30 min, protected
-At 09:00, start planning init and product work, not an extra fixed opening.
+09:00–09:10: readiness check-in inside Part 03's existing 09:00–10:00 slot.
+From 09:10: planning init, confirmation and product work.
 If preparation is blocked, pair up in an approved environment and record
 the readiness gap; do not add a live installation block.
 At 11:45, stop adding scope and preserve actual evidence for resumption.
 Do not consume the final thirty-minute discussion.
+
+CLIENT CHOICE
+App/CLI: choose Squad Coordinator through the App agent list or CLI /agent;
+use plain requests. For VS Code, prepare this repository and knowledge-docs,
+then install APM, authenticate and run at the participant repository root:
+  apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
+Confirm /squad and /squad-federation prompt entries in GitHub Copilot Chat.
+Do not overlay duplicate plug-in/APM resources. A terminal or MCP-only
+installation does not prove prompt availability. The guide's VS Code tab
+renders complete commands. Single-squad init is in request, not an init flag.
+Federation promote and init are standalone flags, not mode values.
+Interactive omits mode. Optional autonomous/autopilot applies only to
+product and implementation; required approvals and final validation remain.
+Untargeted federation autopilot can span routed sub-squads. Never invent
+a registered squad name. Setup confirmations remain separate self-reports.
+Sources:
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad.prompt.md
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad-federation.prompt.md
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/apm.yml
 
 1. SCENARIO BUSINESS OBJECTIVE
 A fictional team regularly prepares a reporting summary from indicators.

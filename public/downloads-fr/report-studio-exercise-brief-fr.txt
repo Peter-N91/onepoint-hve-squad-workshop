@@ -1,0 +1,134 @@
+REPORT STUDIO — CADRAGE SYNTHÉTIQUE RÉDIGÉ POUR L’EXERCICE
+Version exercise-1.0 — Atelier Onepoint, 17 septembre 2026
+
+Ce document est une création pédagogique générique. Il ne reproduit aucun
+cadrage privé, besoin approuvé ni compte rendu client. Données, noms de
+périmètre et valeurs sont synthétiques. Chaque exigence ci-dessous relève
+du scénario d’exercice ; les choix du premier incrément restent à approuver.
+Enregistrez ce TXT sous report-studio-exercise-brief.txt dans knowledge-docs
+à la racine du dépôt participant.
+
+AVANT L’ATELIER — À VOTRE RYTHME, 0 MINUTE EN DIRECT
+01. Objectif et méthode : comprendre l’objectif pédagogique et séparer la
+    constitution de l’équipe du travail métier.
+02. Environnement et contexte : préparer le dépôt participant, les documents
+    lisibles dans knowledge-docs, le client et les outils avant jeudi.
+Terminez les deux parties à votre rythme. La demande de vérification ne
+teste que la compréhension ; l’initialisation et le travail produit
+commencent en direct dans la partie 03.
+
+PROGRAMME EN DIRECT — 17 SEPTEMBRE 2026, CEST — 210 MINUTES
+09:00–10:00 | 03 Périmètre produit et première version | 60 min
+10:00–10:30 | 04 Fédération et décisions techniques | 30 min
+10:30–10:40 | Pause | 10 min
+10:40–11:45 | 05 Premier incrément et preuves | 65 min
+11:45–12:00 | 06 Revue et reprise autonome | 15 min
+12:00–12:30 | 07 Discussion et prochaines étapes | 30 min, protégées
+09:00–09:10 : vérification de préparation dans le créneau 09:00–10:00
+existant de la partie 03. Dès 09:10 : initialisation, confirmation et travail
+produit. En cas de blocage, formez un binôme dans un environnement approuvé
+et consignez l’écart ; n’ajoutez pas d’installation en direct.
+À 11:45, cessez d’élargir le périmètre et préservez les preuves réelles pour
+la reprise. Ne consommez pas les trente minutes de discussion finale.
+
+CHOIX DU CLIENT
+App/CLI : choisissez Squad Coordinator via la liste des agents de l’App ou
+/agent dans le CLI ; utilisez des demandes simples. Pour VS Code, préparez
+ce dépôt et knowledge-docs, puis installez APM, authentifiez-vous et exécutez
+à la racine du dépôt participant :
+  apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
+Confirmez /squad et /squad-federation dans GitHub Copilot Chat.
+Ne superposez pas des ressources plug-in/APM en double. Une installation
+terminal ou MCP seule ne prouve pas la disponibilité des commandes.
+L’onglet VS Code du guide affiche les commandes complètes. L’initialisation
+d’une équipe unique est dans request, pas dans un drapeau init.
+promote et init de fédération sont des drapeaux, pas des valeurs de mode.
+Interactif omet mode. Les choix autonomous/autopilot ne concernent que le
+produit et l’implémentation ; approbations et validation finale restent
+nécessaires. Le pilote automatique de fédération sans cible peut concerner
+plusieurs sous-équipes routées. N’inventez pas de nom d’équipe enregistré.
+Les confirmations d’initialisation restent des déclarations séparées.
+Sources :
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad.prompt.md
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad-federation.prompt.md
+https://github.com/Peter-N91/hve-squad/blob/v0.16.2/apm.yml
+
+1. OBJECTIF MÉTIER DU SCÉNARIO
+Une équipe fictive prépare régulièrement une synthèse à partir d’indicateurs.
+Elle souhaite réduire la ressaisie et conserver un document Office que
+l’auteur peut enrichir avant diffusion.
+Le produit cible est un complément Office pour Word et PowerPoint.
+Fabric et Power BI sont des sources futures possibles, pas des connexions
+disponibles ou exécutées pendant l’exercice.
+
+2. EXIGENCES DU SCÉNARIO
+E1. L’utilisateur choisit une période et voit le périmètre et les indicateurs
+correspondants avant de les insérer dans le document.
+E2. Le contenu généré reste modifiable dans Word et PowerPoint ; un export
+image ou PDF seul ne répond pas à cet objectif.
+E3. Le contenu affiche sa source, la date de référence et la version du
+modèle de données ou du modèle de sortie utilisé.
+E4. Les ajouts manuels de l’auteur survivent à une nouvelle insertion selon
+une règle explicitement convenue.
+E5. Les erreurs et données manquantes sont visibles. Aucune valeur manquante
+n’est inventée, reprise silencieusement ni convertie en zéro.
+E6. Les tests distinguent sortie générée, simulation navigateur, intégration
+Office exécutée et validation restant à faire.
+
+3. PROPOSITION PÉDAGOGIQUE À APPROUVER — PAS UNE EXIGENCE CLIENT APPROUVÉE
+Dans Word, sélectionner une période disponible, prévisualiser trois indicateurs synthétiques, puis insérer un tableau natif modifiable et la provenance des données. Une deuxième insertion ne doit pas supprimer les commentaires manuels : convenir du comportement souhaité et le tester.
+Dans PowerPoint, insérer une synthèse modifiable à partir des mêmes données si le temps et les API de l’application le permettent. Sinon, conserver les critères et le travail restant dans le backlog.
+Deux périodes et trois indicateurs limitent volontairement la complexité.
+La convention proposée bloque l’insertion d’un rapport incomplet si une
+valeur est nulle ; faites-la approuver avant l’implémentation.
+
+4. JEU SYNTHÉTIQUE ET TESTS
+Téléchargement : report-studio-fixture-fr.json ; schéma 1.0, modèle exercise-1.0.
+Copiez-le sous data\report-studio-fixture.json dans le dépôt participant.
+Périmètre : Portefeuille Démonstration synthétique.
+Source : Jeu synthétique local Report Studio. Référence : 2026-09-01.
+Indicateurs : dossiers traités (dossiers), délai moyen (jours),
+taux de conformité (%).
+Juillet 2026 : 1 280 ; 4,2 ; 96,5.
+Août 2026 : 1 345 ; 3,8 ; 97,2.
+Le JSON conserve les nombres numériques avec un point décimal.
+Cas négatif valeur nulle : délai moyen d’août indisponible ; message explicite,
+pas zéro, pas de reprise de juillet, pas d’insertion du rapport incomplet
+selon la convention proposée.
+Cas négatif période absente : septembre 2026 n’est pas dans le jeu ;
+message explicite, pas de substitution par août, document existant préservé.
+Ces cas sont des variantes de test, pas une troisième période nominale ni
+un quatrième indicateur.
+
+5. MVE — EXPÉRIMENTATION MINIMALE VIABLE
+Tester dans l’application choisie si le contenu généré reste modifiable et si les ajouts manuels survivent à une nouvelle insertion. Deux jeux de données, trois indicateurs, zéro valeur inventée et zéro commentaire perdu. Seuil proposé à approuver ; l’expérimentation n’a pas été exécutée pendant la préparation.
+Protocole proposé : tester les deux périodes, modifier le tableau, ajouter
+un commentaire, réinsérer selon la règle approuvée et comparer les résultats.
+Aucun résultat n’est prérempli. Consignez l’application, sa version, le
+protocole, les preuves et l’état non exécuté si le test Office n’a pas eu lieu.
+
+6. DÉCISIONS À PRENDRE
+Applications et versions ; type de manifeste et ensembles de spécifications
+pris en charge ; autorisation de chargement indépendant et serveur HTTPS
+local ; règle de réinsertion (nouvelle section ou remplacement contrôlé) ;
+modèles de sortie Word et PowerPoint ; critères du premier incrément.
+Plus tard : contrat d’accès Fabric/OneLake ou modèle sémantique Power BI,
+authentification, permissions minimales et autorisations/RLS préservées.
+Un export Power BI ne garantit pas des éléments Office modifiables.
+
+7. HORS EXERCICE ET LIVRABLES
+Aucune connexion de production, consentement administrateur pendant la
+session, déploiement client, automatisation planifiée complète ou promesse
+de MVP Word et PowerPoint terminé.
+Livrables : exigences métier et produit revues, MVE, backlog priorisé,
+incrément choisi, décisions, preuves réelles et transmission.
+Azure DevOps n’est qu’une extension facultative après autorisation ;
+un backlog local suffit pour l’atelier.
+
+8. CRITÈRES D’ACCEPTATION PROPOSÉS — À APPROUVER AVANT L’IMPLÉMENTATION
+1. La période et le périmètre sont visibles ; les trois valeurs correspondent exactement au jeu synthétique choisi
+2. Un tableau Word natif modifiable, pas uniquement une capture d’écran ou un PDF
+3. La source synthétique, la date de référence et la version du modèle sont affichées
+4. La réinsertion suit la règle choisie ; aucun commentaire utilisateur n’est perdu
+5. Période absente ou valeur nulle : un message explicite, jamais zéro ni une donnée inventée
+6. L’application Office, sa version et le résultat observé sont consignés ; un test non lancé est marqué non exécuté

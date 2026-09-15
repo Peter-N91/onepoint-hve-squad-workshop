@@ -1,4 +1,5 @@
 export type SetupId = 'planning-team' | 'promote' | 'delivery-team'
+export type LessonId = 'start' | 'prepare' | 'product' | 'federation' | 'implementation' | 'resume' | 'discussion'
 export type Prompt = {
   title: string
   text: string
@@ -6,6 +7,7 @@ export type Prompt = {
   shell?: boolean
   lifecycle?: 'init' | 'promote'
   requiresSetup?: SetupId[]
+  businessMode?: boolean
 }
 export type LifecycleStep = {
   id: SetupId
@@ -17,7 +19,7 @@ export type LifecycleStep = {
 }
 export type LessonStep = { title: string; body: string; prompt?: Prompt }
 export type Lesson = {
-  id: string; number: string; title: string; eyebrow: string; time: string; minutes: number
+  id: LessonId; number: string; title: string; eyebrow: string; time: string; minutes: number
   goal: string; inputs: string[]; concept: string
   launch?: Prompt; launchHint?: string; behaviors?: string[]
   setup?: LifecycleStep[]; beforeInstall?: LessonStep[]
@@ -25,7 +27,7 @@ export type Lesson = {
 }
 
 export const baseline = '0.16.2'
-export const observationNote = 'Expected behaviors to observe, not instructions to paste. Record what actually happens. If a check or proposal is missing, record that gap before intervening; do not quietly prescribe it and then present it as automatic. Consent is still required.'
+export const observationNote: string = 'Expected behaviors to observe, not instructions to paste. Record what actually happens. If a check or proposal is missing, record that gap before intervening; do not quietly prescribe it and then present it as automatic. Consent is still required.'
 export const prompts = {
   readiness: "Read the scoping document in knowledge-docs at the root of this repository. Summarize the business objective and three requirements, with their section references. Distinguish requirements from proposed workshop choices. For now, only answer: do not start planning or development.",
   planningInit: "init\n\nUse the scoping document in knowledge-docs at the root of this repository. We need to understand the need, define business and product requirements, test uncertainties and prioritize the work before development. Set up a team for this planning work. Stop once the team is ready; I will send the work request next.",
@@ -123,7 +125,7 @@ export const lessons: Lesson[] = [
     inputs: ['Your own participant repository, separate from this guide', 'The Report Studio exercise brief, or an authorized scoping document kept locally'],
     concept: 'You express a business outcome, answer questions and assess evidence. Specialist selection and review are behaviors to observe, not an internal procedure to dictate in every request.',
     steps: [
-      { title: 'Follow the complete sequence', body: 'Read Parts 01 and 02 at your own pace before Thursday. At 09:00, start Part 03: planning initialization → confirmation → product work → scope review → promotion → confirmation → delivery initialization → confirmation → implementation. Lifecycle commands and business requests are separate messages; there is no fixed live opening or installation block.' },
+      { title: 'Follow the complete sequence', body: 'Read Parts 01 and 02 at your own pace before Thursday. Part 03 starts with a readiness check-in from 09:00 to 09:10, then planning initialization → confirmation → product work → scope review → promotion → confirmation → delivery initialization → confirmation → implementation. Lifecycle commands and business requests are separate messages. The check-in fits inside the existing product slot, not a live installation session.' },
       { title: 'Define success', body: 'By noon, be able to explain the scope, decisions, tests actually executed and next action. A browser preview does not validate the add-in in Office. A designed experiment has no result yet.' },
       { title: 'Separate target and exercise', body: 'Word and PowerPoint both remain targets. Starting in Word, using synthetic data and adopting the proposed thresholds are teaching proposals to approve. Real Fabric and Power BI connectivity comes later.' },
     ],
@@ -143,7 +145,7 @@ export const lessons: Lesson[] = [
     steps: [
       { title: 'Check versions and client', body: 'For the plug-in, confirm both active entries in the actual client. For APM, authenticate to GitHub, then install from the participant repository. v0.16.2 is the Qubix rehearsal baseline, not a guarantee of installed versions or validation of the Onepoint workstation.' },
       { title: 'Check the Office environment', body: 'Record OS, hosts, versions, manifest type, requirement sets, local HTTPS server and sideloading authorization. Do not request administrator consent during the session. No production connector is needed for synthetic data.' },
-      { title: 'Have the client read the context', body: 'After installation, choose Squad Coordinator in the App agent list or via /agent in the CLI. Compare the response below with the document. If the client misses knowledge-docs, explicitly provide the authorized local path.', prompt: { title: 'Check understanding without starting work', entry: 'squad', text: prompts.readiness } },
+      { title: 'Have the client read the context', body: 'After installation, choose Squad Coordinator in the App agent list or via /agent in the CLI; in VS Code confirm the /squad prompt entry in GitHub Copilot Chat. Compare the response below with the document. If the client misses knowledge-docs, explicitly provide the authorized local path.', prompt: { title: 'Check understanding without starting work', entry: 'squad', text: prompts.readiness } },
     ],
     evidence: ['Local repository and readable scoping document in knowledge-docs', 'Actual installed versions and client used', 'Office readiness or an explicitly recorded blocker'],
     checks: ['knowledge-docs is at the root of my participant repository.', 'My two paired entries or APM installation are checked.', 'I recorded the host and limitations of my Office environment.', pdfReadiness.checkpoint],
@@ -156,13 +158,13 @@ export const lessons: Lesson[] = [
     concept: 'Initializing the team does not yet ask it to produce documents. Confirm its proposal, then send one complete business request. BRD: business requirements. PRD: product behaviors. MVE: minimum viable experiment. MVP: minimum viable product.',
     setup: [{
       id: 'planning-team', title: '1. Initialize the planning team',
-      description: 'At 09:00, start the live workshop here: choose Squad Coordinator. Send the message below, review the proposed team and confirm its creation, then request product work within this same hour. Parts 01 and 02 are self-paced pre-work, not an extra live opening. If a suitable team already exists, inspect and reuse it rather than overwriting it.',
+      description: '09:00–09:10: confirm readiness (repository, readable context, client entries and remaining blockers); pair up in an approved environment if needed. From 09:10, select the planning entry for your client, send the message below, review the proposed team and confirm its creation, then request product work within this same hour. Parts 01 and 02 remain self-paced pre-work, not a live installation session. If a suitable team already exists, inspect and reuse it rather than overwriting it.',
       request: { title: 'Initialize for planning', entry: 'squad', lifecycle: 'init', text: prompts.planningInit },
       expected: ['Proposed expertise follows from the planning context, without a profile prescribed in the request.', 'You confirm and check the team state in the correct repository.', 'Initialization finishes without starting the BRD, PRD, experiment or backlog.'],
       checkpoint: 'I confirmed the planning team and checked that its initialization is complete.',
     }],
     launchHint: '2. After actually confirming the team, send the work request, then answer useful questions.',
-    launch: { title: 'Prepare a business and product plan for review', entry: 'squad', requiresSetup: ['planning-team'], text: prompts.product },
+    launch: { title: 'Prepare a business and product plan for review', entry: 'squad', requiresSetup: ['planning-team'], businessMode: true, text: prompts.product },
     behaviors: ['Planning triggers analysis of missing or conflicting requirements.', 'The team proposes additional expertise and requests the necessary consent.', 'Facts, assumptions, decisions and unexecuted experiments are distinguished; the review is identifiable.'],
     steps: [
       { title: 'BRD: check the need', body: 'Link objectives, scope and constraints to sections of the scoping document. Word and PowerPoint are the targets; the first slice does not cover the whole need. Challenge at least one assumption without imposing an internal allocation of roles.' },
@@ -182,14 +184,14 @@ export const lessons: Lesson[] = [
     setup: [
       {
         id: 'promote', title: '1. Promote while preserving the work',
-        description: 'Select Squad Federation Coordinator after the product review. Inspect proposed changes and paths before confirming. An existing federation must be inspected, not recreated.',
+        description: 'Select Squad Federation Coordinator (App/CLI) or the /squad-federation prompt (VS Code) after the product review. Inspect proposed changes and paths before confirming. An existing federation must be inspected, not recreated.',
         request: { title: 'Evolve the existing organization', entry: 'squad-federation', lifecycle: 'promote', requiresSetup: ['planning-team'], text: prompts.promote },
         expected: ['The planning team is adopted, not rebuilt.', 'Requirements, decisions, backlog and evidence are preserved; new paths are recorded.', 'knowledge-docs stays at the root and no delivery team is initialized yet.'],
         checkpoint: 'I confirmed promotion and checked that planning work is preserved.',
       },
       {
         id: 'delivery-team', title: '2. Initialize the delivery team',
-        description: 'Stay with Squad Federation Coordinator. After confirmed promotion, send init with the Office context. Confirm the proposed team without requesting implementation yet.',
+        description: 'Stay with the federation entry for your client. After confirmed promotion, send the init request with the Office context. Confirm the proposed team without requesting implementation yet.',
         request: { title: 'Prepare delivery of the agreed slice', entry: 'squad-federation', lifecycle: 'init', requiresSetup: ['promote'], text: prompts.deliveryInit },
         expected: ['Office and data expertise is proposed from the need and available capabilities.', 'The team is registered alongside planning with distinct responsibilities.', 'Initialization finishes without starting development.'],
         checkpoint: 'I confirmed the delivery team and checked its initialization in the federation.',
@@ -211,7 +213,7 @@ export const lessons: Lesson[] = [
     inputs: ['Initialized delivery team', 'Reviewed backlog and decisions, approved slice', 'Downloaded synthetic JSON dataset; no production access required'],
     concept: 'The small Word slice is a teaching proposal to approve, not an imposed complete product. Keep both Office targets. Implementation, engine testing, web preview and host validation are four distinct states.',
     launchHint: '3. After both confirmations, send this separate request. Review and approve the proposed implementation plan before it is executed.',
-    launch: { title: 'Implement the agreed first release', entry: 'squad-federation', requiresSetup: ['delivery-team'], text: prompts.implementation },
+    launch: { title: 'Implement the agreed first release', entry: 'squad-federation', requiresSetup: ['delivery-team'], businessMode: true, text: prompts.implementation },
     behaviors: ['Implementation follows the slice and its dependencies without silently expanding scope.', 'Business ambiguities and significant changes require a human decision.', 'The summary distinguishes executed, simulated, blocked and not executed; errors do not become zeros.'],
     steps: [
       { title: '10:40–11:00 · Approve the plan', body: 'Confirm the backlog items and host. Without reviewed scope, agree a slice before building. Download the Report Studio dataset and place it in data\\report-studio-fixture.json at the participant repository root; create data if needed. Define the contract: period, scope, three numbers, provenance, date and version.' },
@@ -230,7 +232,7 @@ export const lessons: Lesson[] = [
     concept: 'A new conversation does not mean a new team. Resumption should recognize the agreed scope and propose the next useful action, without prescribing internal state paths.',
     behaviors: ['Existing context is recovered and evidence is distinguished from claims.', 'The next action is proposed, not executed without your approval.'],
     steps: [
-      { title: '11:45–11:50 · Resume in the same repository', body: 'Open a new conversation and select the federation coordinator. If you could not form the federation, stay with the coordinator of the team that actually exists; do not create one just to tick a guide checkbox.', prompt: { title: 'Recover the work and propose next steps', entry: 'squad-federation', text: prompts.resume } },
+      { title: '11:45–11:50 · Resume in the same repository', body: 'Open a new conversation and select the federation entry for your client. If you could not form the federation, stay with the coordinator of the team that actually exists (or /squad in VS Code); do not create one just to tick a guide checkbox.', prompt: { title: 'Recover the work and propose next steps', entry: 'squad-federation', text: prompts.resume } },
       { title: '11:50–11:55 · Write your own request', body: 'Formulate a useful next business question. Explain the desired outcome, constraints and expected decision without prescribing internal roles. Compare the proposed next step with the existing backlog.' },
       { title: '11:55–12:00 · Prepare the handoff', body: 'Download the blank handoff worksheet and complete it in your private repository with actual paths, criteria, blockers and next action. Export progress if useful; it remains self-reporting, not project evidence.' },
     ],
@@ -262,11 +264,11 @@ export const troubleshooting = [
   ['Fabric/Power BI unavailable', 'Stay on synthetic datasets. Track the real connector, permissions and RLS tests in the backlog.'],
   ['Not enough time', 'At 11:45, stop adding scope, preserve the work and record real evidence. Do not consume the thirty-minute discussion.'],
   ['Azure DevOps publication requested', 'Optional extension only when the target, access and approval are available. Preview the exact batch and obtain confirmation before writing; otherwise keep a local backlog.'],
-  ['I see a skill rather than the agent', 'Use the App agent list or /agent in the CLI. Choose Squad Coordinator for planning, Squad Federation Coordinator for federation. Do not invoke a similarly named slash skill.'],
-  ['The agent is missing', 'Check the repository, both paired entries and the current client. App and CLI may use different plug-in directories. A copied command does not make a missing agent available.'],
+  ['I see a skill rather than the agent', 'Use the App agent list or /agent in the CLI. Choose Squad Coordinator for planning, Squad Federation Coordinator for federation. VS Code instead uses the verified /squad and /squad-federation prompt files installed by repository-scoped APM, not a similarly named skill.'],
+  ['The agent or prompt is missing', 'Check the repository, installation and current client. App and CLI may use different plug-in directories. In VS Code verify .github/prompts/squad and the slash entries in GitHub Copilot Chat after APM installation. Terminal or MCP-only installation does not prove prompt availability. Avoid duplicate plug-in resources; a copied command does not install anything.'],
   ['An expected check is missing', 'Record the gap before intervening. A checked box on this site is neither execution, authorization nor automatic evidence.'],
-  ['Where do I send init and promote?', 'In the selected agent conversation, with full context. These are neither standalone PowerShell commands nor slash skills. Confirm each outcome before the next message.'],
-  ['Pre-work unfinished at 09:00', 'Parts 01 and 02 are self-paced before the workshop, with zero live minutes. Join an approved partner environment and start Part 03 with planning init and product work at 09:00. Record your readiness gap; do not add an installation or opening block or shorten the final discussion.'],
+  ['Where do I send init and promote?', 'In the selected App/CLI agent conversation, with full context; in VS Code use the complete prompt-file command shown. These are not standalone PowerShell commands. Single-squad initialization has no standalone init flag in VS Code. Confirm each outcome before the next message.'],
+  ['Pre-work unfinished at 09:00', 'Parts 01 and 02 are self-paced before the workshop, with zero live minutes. Join an approved partner environment. Part 03 has a 09:00–09:10 readiness check-in, then planning init and product work from 09:10. Record your readiness gap; do not add a live installation session or shorten the final discussion.'],
 ]
 export const sources = [
   { name: 'HVE Squad v0.16.2 — usage', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/docs/usage.html' },
@@ -280,4 +282,7 @@ export const sources = [
   { name: 'Official Copilot CLI installation', url: 'https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli' },
   { name: 'APM quickstart', url: 'https://microsoft.github.io/apm/quickstart/' },
   { name: 'HVE Core — minimum viable experiment design', url: 'https://github.com/microsoft/hve-core/blob/7cc6dc42caf7f842e1f7aa9f3d41cb4581538f33/.github/skills/project-planning/experiment-design/SKILL.md' },
-]
+  { name: 'VS Code /squad prompt — v0.16.2 inputs', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad.prompt.md' },
+  { name: 'VS Code /squad-federation prompt — v0.16.2 inputs', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad-federation.prompt.md' },
+  { name: 'APM manifest — v0.16.2 prompt-file distribution', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/apm.yml' },
+] as const
