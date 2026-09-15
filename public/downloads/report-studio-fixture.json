@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "exercise": "Report Studio",
+  "notice": "Entirely synthetic data, created for the exercise. No customer outcome or requirement is attested.",
+  "status": "Teaching proposal to approve",
+  "scope": "Synthetic Demonstration portfolio",
+  "source": "Local synthetic Report Studio dataset",
+  "referenceDate": "2026-09-01",
+  "modelVersion": "exercise-1.0",
+  "indicators": [
+    { "id": "dossiersTraites", "label": "Cases processed", "unit": "cases" },
+    { "id": "delaiMoyenJours", "label": "Average turnaround", "unit": "days" },
+    { "id": "tauxConformitePct", "label": "Compliance rate", "unit": "%" }
+  ],
+  "periods": [
+    { "id": "2026-07", "label": "July 2026", "values": { "dossiersTraites": 1280, "delaiMoyenJours": 4.2, "tauxConformitePct": 96.5 } },
+    { "id": "2026-08", "label": "August 2026", "values": { "dossiersTraites": 1345, "delaiMoyenJours": 3.8, "tauxConformitePct": 97.2 } }
+  ],
+  "negativeCases": [
+    {
+      "id": "valeur-nulle",
+      "label": "August — missing turnaround",
+      "periodId": "2026-08",
+      "overrideValues": { "delaiMoyenJours": null },
+      "expected": "Display “Data unavailable: Average turnaround”. Do not replace with zero, reuse July or invent a value. Block insertion of this incomplete report under the exercise convention to approve."
+    },
+    {
+      "id": "periode-absente",
+      "label": "September — missing period",
+      "periodId": "2026-09",
+      "expected": "Display “Period unavailable: 2026-09”. Do not default to August, insert nothing and preserve the existing document."
+    }
+  ],
+  "reinsertion": "Decide the rule before testing. Zero lost manual comments is a proposed threshold to approve, not an already observed result.",
+  "officeValidation": "Not executed during preparation; the guide only simulates the local preview."
+}

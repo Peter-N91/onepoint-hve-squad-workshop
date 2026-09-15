@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <meta name="description" content="Onepoint workshop on 17 September 2026: scope and start a Word and PowerPoint add-in with HVE Squad. Synthetic case, evidence and independent resumption." />
+    <title>onepoint | From data to reports, with HVE Squad</title>
+    <script>
+      (() => {
+        const param = new URLSearchParams(window.location.search).get("scoutTheme");
+        const theme =
+          param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>This interactive guide requires JavaScript. Use a printed copy of the guide if scripts are unavailable.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

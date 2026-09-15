@@ -1,0 +1,64 @@
+REPORT STUDIO — BLANK ACCEPTANCE AND DECISION WORKSHEET
+Onepoint workshop — 17 September 2026, 09:00–12:30 CEST
+Complete in the participant repository. No prefilled results.
+Do not enter private data in the guide or publish it alongside the guide.
+
+CONTEXT
+Test date:
+Participant repository:
+Copilot client / version:
+Actual HVE Squad / HVE Core versions or APM revisions:
+OS / Office host / version / requirement sets:
+Selected scope and backlog items:
+Local scoping source / version / sections:
+
+DECISION — DUPLICATE FOR EACH CHOICE
+Question:
+Fact and reference:
+Assumption or teaching proposal:
+Possible choices:
+Decision / rationale:
+Confirmed by / date:
+Impact on Word and PowerPoint:
+Next evidence / owner to designate:
+
+MINIMUM VIABLE EXPERIMENT (MVE ≠ MVP)
+Uncertainty:
+Hypothesis:
+Protocol:
+Proposed measure and threshold:
+Threshold approval:
+Status (not executed / executed / blocked):
+Observed outcome:
+Decision after observation:
+
+ACCEPTANCE — DUPLICATE FOR EACH CRITERION
+Backlog item / criterion:
+Nominal or negative dataset / period:
+Approved expected outcome:
+Exact action or command:
+Observed:
+Status (executed pass / executed fail / simulated / not executed / blocked):
+Evidence path:
+Gap / next action:
+
+PROPOSED ACCEPTANCE CRITERIA — APPROVE BEFORE IMPLEMENTATION
+[ ] Period and scope are visible; all three values exactly match the selected synthetic dataset
+[ ] An editable native Word table, not only a screenshot or PDF
+[ ] Synthetic source, reference date and template version are displayed
+[ ] Reinsertion follows the selected rule; no user comment is lost
+[ ] Missing period or null value: an explicit message, never zero or invented data
+[ ] Office host, version and observed outcome are recorded; an unrun test is marked not executed
+
+ADDITIONAL COVERAGE TO CHECK (boxes left blank)
+[ ] Both nominal periods tested.
+[ ] Null value: explicit message, no zero or carried-over value.
+[ ] Missing period: explicit message, no implicit substitution.
+[ ] PowerPoint tested or criteria and remaining work retained.
+
+SUMMARY
+Spontaneous behavior observed:
+Human intervention needed:
+Expected but missing behavior:
+Unexecuted items and blockers:
+Approved next action:

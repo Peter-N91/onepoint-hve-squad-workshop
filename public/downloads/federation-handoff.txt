@@ -1,0 +1,40 @@
+REPORT STUDIO — BLANK HANDOFF
+Exercise material, not preinitialized team state.
+Keep the completed worksheet in the participant project; do not publish it with the guide.
+
+Date / author:
+Participant repository:
+Conversation or context to resume:
+Planning team actually created / path:
+Initialization confirmation:
+Confirmed promotion / preserved paths and artifacts:
+Delivery team actually created / path:
+Initialization confirmation:
+
+AGREED SCOPE
+Reviewed BRD:
+Reviewed PRD:
+Backlog / first-slice items:
+Approved decisions / open questions:
+MVE / threshold / actual status:
+Rule for preserving manual additions:
+Word and PowerPoint targets / deferred scope:
+
+ACTUAL STATE
+Changes produced:
+Executed tests and evidence:
+Simulated-only tests:
+Unexecuted tests:
+Blockers / environment / versions:
+Known gaps:
+Future Fabric / Power BI connector and remaining validations:
+
+RESUMPTION
+Next useful backlog action:
+Dependencies:
+Owner to designate:
+Decision required before continuing:
+Items not to overwrite:
+
+Reminder: resume the same project; do not reinitialize teams.
+Checked browser progress does not constitute project evidence.

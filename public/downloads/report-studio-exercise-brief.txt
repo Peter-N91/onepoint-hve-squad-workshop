@@ -1,0 +1,107 @@
+REPORT STUDIO — SYNTHETIC BRIEF WRITTEN FOR THE EXERCISE
+Version exercise-1.0 — Onepoint workshop, 17 September 2026
+
+This document is a generic teaching creation. It reproduces no private
+brief, approved need or customer meeting record. Data, scope names and
+values are synthetic. Every requirement below belongs to the exercise
+scenario; first-slice choices remain to be approved.
+Save this TXT in knowledge-docs at the participant repository root.
+
+BEFORE THE WORKSHOP — SELF-PACED, 0 LIVE MINUTES
+01. Outcome and method: understand the learning outcome and separate
+    team setup from business work.
+02. Environment and context: prepare the participant repository,
+    readable knowledge-docs, client and tools before Thursday.
+Complete both parts at your own pace. The readiness request checks
+understanding only; planning init and product work start live in Part 03.
+
+LIVE AGENDA — 17 SEPTEMBER 2026, CEST — 210 MINUTES
+09:00–10:00 | 03 Product scope and first release | 60 min
+10:00–10:30 | 04 Federation and technical decisions | 30 min
+10:30–10:40 | Break | 10 min
+10:40–11:45 | 05 First slice and evidence | 65 min
+11:45–12:00 | 06 Review and independent resumption | 15 min
+12:00–12:30 | 07 Discussion and next steps | 30 min, protected
+At 09:00, start planning init and product work, not an extra fixed opening.
+If preparation is blocked, pair up in an approved environment and record
+the readiness gap; do not add a live installation block.
+At 11:45, stop adding scope and preserve actual evidence for resumption.
+Do not consume the final thirty-minute discussion.
+
+1. SCENARIO BUSINESS OBJECTIVE
+A fictional team regularly prepares a reporting summary from indicators.
+It wants to reduce retyping and retain an Office document that an author
+can enrich before distribution.
+The target product is an Office add-in for Word and PowerPoint.
+Fabric and Power BI are potential future sources, not connections
+available or executed during the exercise.
+
+2. SCENARIO REQUIREMENTS
+E1. The user selects a period and sees the scope and corresponding
+indicators before inserting them into the document.
+E2. Generated content stays editable in Word and PowerPoint; an image
+or PDF export alone does not meet this objective.
+E3. Content displays its source, reference date and the version of the
+data model or output template used.
+E4. The author's manual additions survive a new insertion under an
+explicitly agreed rule.
+E5. Errors and missing data are visible. No missing value is invented,
+silently carried over or converted to zero.
+E6. Tests distinguish generated output, browser simulation, executed
+Office integration and validation still to be done.
+
+3. TEACHING PROPOSAL TO APPROVE — NOT AN APPROVED CUSTOMER REQUIREMENT
+In Word, select an available period, preview three synthetic indicators, then insert an editable native table and data provenance. A second insertion must not remove manual comments: agree and test the intended behavior.
+In PowerPoint, insert an editable summary using the same data if time and host APIs allow. Otherwise, keep the criteria and remaining work in the backlog.
+Two periods and three indicators intentionally limit complexity.
+The proposed convention blocks insertion of an incomplete report if
+a value is null; approve it before implementation.
+
+4. SYNTHETIC DATASET AND TESTS
+File: report-studio-fixture.json, schema 1.0, template exercise-1.0.
+Scope: Synthetic Demonstration portfolio.
+Source: Local synthetic Report Studio dataset. Reference date: 2026-09-01.
+Indicators: cases processed (cases), average turnaround (days),
+compliance rate (%).
+July 2026: 1280; 4.2; 96.5.
+August 2026: 1345; 3.8; 97.2.
+Null-value negative case: August average turnaround is unavailable;
+explicit message, not zero, no reuse of July's value, no insertion
+of the incomplete report under the proposed convention.
+Missing-period negative case: September 2026 is not in the dataset;
+explicit message, no substitution with August, existing document preserved.
+These negative cases are test variants, not a third nominal period
+or a fourth indicator.
+
+5. MVE — MINIMUM VIABLE EXPERIMENT
+Test in the selected host whether generated content remains editable and manual additions survive a new insertion. Two datasets, three indicators, zero invented values and zero lost comments. Proposed threshold to approve; the experiment has not been executed during preparation.
+Proposed protocol: test both periods, edit the table, add a comment,
+reinsert under the approved rule and compare results.
+No experiment result is prefilled. Record the host, version, protocol,
+evidence and not-executed status if the Office test was not run.
+
+6. DECISIONS TO MAKE
+Hosts and versions; supported manifest type and requirement sets;
+sideloading authorization and local HTTPS server;
+reinsertion rule (new section or controlled replacement);
+Word and PowerPoint output templates; first-slice criteria.
+Later: Fabric/OneLake access contract or Power BI semantic model,
+authentication, least-privilege permissions and preserved authorization/RLS.
+A Power BI export does not guarantee editable Office elements.
+
+7. OUTSIDE THE EXERCISE AND DELIVERABLES
+No production connectivity, administrator consent during the session,
+customer deployment, complete scheduled automation or promise of
+a finished Word and PowerPoint MVP.
+Deliverables: reviewed business and product requirements, MVE, prioritized
+backlog, selected slice, decisions, real evidence and handoff.
+Azure DevOps is only an optional extension after authorization;
+a local backlog is enough for the workshop.
+
+8. PROPOSED ACCEPTANCE CRITERIA — APPROVE BEFORE IMPLEMENTATION
+1. Period and scope are visible; all three values exactly match the selected synthetic dataset
+2. An editable native Word table, not only a screenshot or PDF
+3. Synthetic source, reference date and template version are displayed
+4. Reinsertion follows the selected rule; no user comment is lost
+5. Missing period or null value: an explicit message, never zero or invented data
+6. Office host, version and observed outcome are recorded; an unrun test is marked not executed

@@ -1,0 +1,153 @@
+ONEPOINT — FROM DATA TO REPORTS, WITH HVE SQUAD
+Hands-on workshop: scope and start an Office add-in
+English local companion — 17 September 2026, 09:00–12:30 CEST
+The final thirty minutes are reserved for discussion.
+Parts 01 and 02: Before the workshop, self-paced, 0 live minutes.
+Complete them before Thursday; they are excluded from the live agenda.
+At 09:00, start Part 03 with planning init and product work, not an opening
+presentation or installation block.
+
+LIVE AGENDA — 210 MINUTES, INCLUDING BREAK AND PROTECTED DISCUSSION
+09:00–10:00 | 03 Product scope and first release | 60 min
+10:00–10:30 | 04 Federation and technical decisions | 30 min
+10:30–10:40 | Break | 10 min
+10:40–11:45 | 05 First slice and evidence | 65 min
+11:45–12:00 | 06 Review and independent resumption | 15 min
+12:00–12:30 | 07 Discussion and next steps | 30 min, protected
+
+GETTING STARTED (PowerShell, at this repository root)
+Node 24+ and npm are required; dependencies locked by package-lock.json.
+  npm ci
+  npm run dev -- --host 127.0.0.1
+Open the actual local address displayed by Vite.
+
+VALIDATION AND PRODUCTION BUILD
+  npm run lint
+  npm test
+  npm run build
+  npm run preview -- --host 127.0.0.1
+Optional local browser check (Windows, Edge installed):
+  node scripts\browser-check.mjs
+This check uses an isolated Edge profile in artifacts, an ephemeral local
+server and CDP APIs through Node; no new dependencies or shared browser.
+EDGE_PATH can select another compatible Chromium executable.
+It checks subpath hosting, keyboard operation, confirmations, export, reset,
+themes, negative cases, mobile layout and standalone HTML.
+It also checks the Qubix brand, original logo, separate pre-work,
+Part 03 live start at 09:00 and print/portable timing and embedded logo.
+It does not test the Office add-in. The report and screenshots stay in
+artifacts, excluded from Git. Browser and server close after the check.
+The build produces:
+  dist\index.html and assets: Pages-compatible static site.
+  dist\onepoint-workshop-portable.html: standalone variant with scripts,
+  styles, original SVG logo, license and four downloads embedded,
+  directly openable in a browser with no logo fetch.
+The portable variant is an ordinary local file, not a version intended
+for secure OneDrive/SharePoint preview. Local persistence depends on the
+browser; use progress export. No server or Office access is required to
+read the guide. External sources open only on reader action.
+No customer connector or Office outcome is executed.
+
+CONTENT AND FILES
+src\content.ts: separate pre-work and live agenda, complete requests,
+criteria, recovery and sources.
+src\App.tsx: navigation, App/CLI clients, plug-in/APM installation, copy,
+confirmations, progress, export, reset, themes, focus mode, full printing,
+lab and downloads.
+src\state.ts: isolated Onepoint storage and confirmation dependencies.
+src\report.ts: data-contract simulation, without Office APIs.
+src\index.css: Qubix's exact HVE Squad --cp-* light/dark/print tokens,
+including --cp-brand buttons; existing responsive layout and typography.
+public\hve-squad-logo.svg: unmodified Qubix HVE Squad SVG, MIT licensed.
+SHA-256: 325cf59d606085357e81c746d3c8b1671f07be076746c59c11864fd7e9891034
+public\THIRD-PARTY-NOTICES.txt: logo provenance, MIT license and existing
+React/HVE Core notices. Attribution is embedded in the portable guide.
+public\downloads\report-studio-exercise-brief.txt: synthetic exercise brief.
+public\downloads\report-studio-fixture.json: two periods, three indicators,
+null variant and missing period, with explicit expected behaviors.
+public\downloads\checkpoint-worksheet.txt: blank acceptance and decisions.
+public\downloads\federation-handoff.txt: blank handoff.
+scripts\portable.mjs: builds the standalone variant from Vite output,
+without new dependencies. Build stops if the structure is no longer suitable.
+
+TEACHING CONTRACT
+Word and PowerPoint remain targets. Word-first, synthetic data and MVE
+thresholds are teaching proposals to approve, not approved customer
+requirements. The lab does not validate Office integration.
+Nominal periods: July (1280; 4.2; 96.5) and August (1345; 3.8; 97.2).
+Three indicators: cases processed, average turnaround in days, compliance %.
+Before implementation, participants place the JSON in
+data\report-studio-fixture.json at their project root; the scoping TXT
+stays in knowledge-docs.
+Null case: average turnaround is missing, not zero.
+Missing-period case: September does not exist; no implicit substitution.
+Blocking incomplete insertion is a proposed convention to approve.
+Decide and test the reinsertion rule to preserve manual additions.
+Unexecuted experiments have no prefilled results.
+
+SEQUENCE
+Before the workshop (Parts 01–02, self-paced, 0 live minutes):
+1. Prepare the participant repository and knowledge-docs before installation.
+   Example guarded against an existing folder: onepoint-workshop-project.
+   Private inputs are excluded from Git; also check tracked files.
+2. Install the hve-squad + hve-squad-hve-core pair in the actual client,
+   or install the APM reference in the participant repository.
+   v0.16.2 is the Qubix rehearsal baseline; verify Onepoint versions.
+3. Choose Squad Coordinator: App list or CLI /agent, not a slash skill.
+Live workshop (Parts 03–07):
+4. At 09:00 in Part 03, send planning init; confirm the team; send the
+   product request. Both initialization and product work occupy 09:00–10:00.
+5. Review BRD, PRD, MVE and backlog; agree the scope.
+6. Choose Squad Federation Coordinator; send promote; confirm.
+7. Send delivery init within the federation; confirm.
+8. Send the implementation business request; approve the plan before execution.
+9. At 11:45, preserve evidence and prepare resumption. At noon, discuss.
+If pre-work is still blocked at 09:00, pair up in an approved environment
+and record individual readiness gaps; do not add a live installation block.
+Azure DevOps is optional, never a mandatory phase.
+No generic Power Platform resources or Dataverse environment are required.
+
+PROGRESS LIMITATIONS
+Checkboxes and workstation notes are self-reports in localStorage.
+The key is specific to Onepoint and this workshop date.
+Copy depends on setup confirmations: unchecking a prerequisite invalidates
+dependent confirmations. This does not inspect the real repository,
+initialize any team or grant consent to an agent.
+A read error suspends saving and preserves existing data.
+Export before closing or resetting if needed. Exports contain reported
+versions: enter no secrets, private information or scoping documents.
+Reset requires a second choice and affects only this workshop.
+The English correction preserves lesson IDs, setup IDs, schema 1 and the
+localStorage key. Existing self-reported progress stays compatible.
+Moving Parts 01–02 to pre-work preserves their numbers and checkpoint IDs.
+Progress and exports still include all seven parts; checkpoints are not
+live-time accounting. The overview offers unfinished pre-work or Part 03.
+Fixture indicator keys and negative-case IDs are stable machine identifiers;
+their labels, metadata and expected messages are English.
+
+PRIVACY AND REPOSITORY STATE
+This repository is the GUIDE, not the participant project. No Office
+documents, private briefs, real data, meeting records, access details,
+customer identities or meeting URLs belong here.
+No uploads, analytics or remote fonts. Supplied files are synthetic or blank.
+No preinitialized team state. The guide repository is named
+onepoint-hve-squad-workshop and uses main as its publishing branch.
+Do not place private material in public\ or dist\.
+
+GITHUB PAGES PUBLICATION
+The .github\workflows\pages.yml workflow runs only manually.
+The validation workflow never deploys.
+Before an explicitly authorized publication: review source and dist,
+confirm versions and scope, configure Pages for GitHub Actions in the
+chosen repository, then trigger the workflow manually.
+Do not infer a public URL: use only an actual confirmed deployment URL.
+base './' and fragment navigation support subpath hosting.
+
+TO CONFIRM BEFORE THE WORKSHOP
+- Actually installed client, HVE Squad and HVE Core versions.
+- Office support for the manifest, requirement sets and native editing.
+- Sideloading and HTTPS development certificate authorization.
+- Agreed slice, null/missing-period convention and reinsertion rule.
+- If access is missing, pair up or use the browser engine; Office remains unvalidated.
+- Real Fabric/Power BI, authentication and permission/RLS tests:
+  separate future work; no executed integration is claimed here.
