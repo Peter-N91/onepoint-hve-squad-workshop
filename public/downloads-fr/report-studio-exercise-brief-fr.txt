@@ -33,7 +33,8 @@ la reprise. Ne consommez pas les trente minutes de discussion finale.
 
 CHOIX DU CLIENT
 App/CLI : choisissez Squad Coordinator via la liste des agents de l’App ou
-/agent dans le CLI ; utilisez des demandes simples. Pour VS Code, préparez
+/agent dans le CLI ; ajoutez mode="autopilot" et une ligne vide avant toute
+demande simple sauf init/promote, qui restent inchangés. Pour VS Code, préparez
 ce dépôt et knowledge-docs, puis installez APM, authentifiez-vous et exécutez
 à la racine du dépôt participant :
   apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
@@ -41,11 +42,21 @@ Confirmez /squad et /squad-federation dans GitHub Copilot Chat.
 Ne superposez pas des ressources plug-in/APM en double. Une installation
 terminal ou MCP seule ne prouve pas la disponibilité des commandes.
 L’onglet VS Code du guide affiche les commandes complètes. L’initialisation
-d’une équipe unique est dans request, pas dans un drapeau init.
+d’une équipe unique utilise le texte de préparation dans request, sans ligne
+initiale init ni drapeau init.
 promote et init de fédération sont des drapeaux, pas des valeurs de mode.
-Interactif omet mode. Les choix autonomous/autopilot ne concernent que le
-produit et l’implémentation ; approbations et validation finale restent
-nécessaires. Le pilote automatique de fédération sans cible peut concerner
+Tous les clients exigent exactement mode="autopilot" pour toute demande hors
+cycle de vie, dont vérification, produit, implémentation et reprise en lecture seule.
+VS Code : /squad mode="autopilot" request="..." pour vérification/produit ;
+/squad-federation mode="autopilot" request="..." pour implémentation/reprise.
+Exceptions : /squad request="..." pour initialisation de planification ;
+/squad-federation promote request="..." et
+/squad-federation init request="..." pour le cycle de vie de fédération.
+Les points de suspension décrivent la syntaxe ; copiez les blocs complets.
+Les commandes shell d’installation restent inchangées. Aucun mode facultatif :
+respectez le périmètre, la lecture seule, les arrêts demandés, l’approbation
+du plan, les approbations d’actions à impact et la validation finale.
+Le pilote automatique de fédération sans cible peut concerner
 plusieurs sous-équipes routées. N’inventez pas de nom d’équipe enregistré.
 Les confirmations d’initialisation restent des déclarations séparées.
 Sources :

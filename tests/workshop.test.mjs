@@ -114,11 +114,12 @@ test('workstation settings are bounded and contain no connection data', () => {
   assert.equal(result.settings.officeVersion.length, 300)
   assert.deepEqual(Object.keys(defaults).sort(), ['clientVersion', 'coreVersion', 'experience', 'install', 'locale', 'mode', 'officeVersion', 'squadVersion'])
 })
-test('both clients receive identical business requests, never a slash skill', () => {
-  for (const lesson of lessons) {
+test('App and CLI receive mandatory autopilot requests, unchanged lifecycle and shell blocks, never a slash skill', () => {
+  for (const experience of ['app', 'cli']) for (const lesson of lessons) {
     for (const prompt of [lesson.launch, ...lesson.steps.map(step => step.prompt), ...(lesson.setup ?? []).map(step => step.request)].filter(Boolean)) {
-      assert.equal(renderPrompt(prompt), prompt.text)
-      assert.ok(!/\/squad|profile\s*=|request=/.test(renderPrompt(prompt)))
+      const actual = renderPrompt(prompt, { ...defaults, experience })
+      assert.equal(actual, prompt.shell || prompt.lifecycle ? prompt.text : `mode="autopilot"\n\n${prompt.text}`)
+      assert.ok(!/\/squad|profile\s*=|request=/.test(actual))
     }
   }
 })
@@ -318,7 +319,8 @@ test('resources, download brief, running instructions and recovery agree on pre-
     for (const item of agenda) assert.ok(text.includes(`${item.time}–${item.end} | ${item.lesson ? `${lessons.find(lesson => lesson.id === item.lesson).number} ` : ''}${item.title} | ${item.minutes} min`))
   }
   const app = await read('../src/App.tsx') + await read('../src/ui.ts')
-  for (const term of ['Before the workshop', '0 live minutes', 'Ready — start Part 03 at 09:00', 'firstPrework', '<PreworkPanel /><LiveAgenda />', 'including the untimed pre-work']) assert.ok(app.includes(term), term)
+  for (const term of ['Before the workshop', '0 live minutes', 'Ready — start Part 03 at 09:00', 'firstPrework', '<PreworkPanel /><LiveAgenda />']) assert.ok(app.includes(term), term)
+  assert.match(app, /including (?:the )?untimed pre-work/)
   assert.match(troubleshooting.find(([title]) => title === 'Pre-work unfinished at 09:00')[1], /09:00–09:10 readiness check-in, then planning init and product work from 09:10/)
   for (const path of ['../src/content.ts', '../src/App.tsx', '../public/downloads/report-studio-exercise-brief.txt', '../RUNNING.txt']) assert.doesNotMatch(await read(path), /09:15|09:35|10:15|10:35|10:45|Clawpilot/)
 })

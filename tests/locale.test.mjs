@@ -27,7 +27,18 @@ test('old schema-1 state migrates without losing checks, client, installation or
   for (const experience of ['app', 'cli']) for (const install of ['plugin', 'apm']) {
     const settings = { experience, install, clientVersion: 'actual-client', squadVersion: 'actual-squad', coreVersion: 'actual-core', officeVersion: 'actual-office' }
     const checked = ['start-0', 'prepare-3', 'product-1', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
-    assert.deepEqual(decodeState(JSON.stringify({ schema: 1, checked, settings })), { schema: 1, checked, settings: { ...settings, locale: 'en', mode: 'interactive' } })
+    assert.deepEqual(decodeState(JSON.stringify({ schema: 1, checked, settings })), { schema: 1, checked, settings: { ...settings, locale: 'en', mode: 'autopilot' } })
+  }
+})
+test('legacy modes migrate to mandatory autopilot without losing any saved workshop fields', () => {
+  assert.equal(defaults.mode, 'autopilot')
+  assert.deepEqual(modes, ['interactive', 'autonomous', 'autopilot'])
+  for (const locale of ['en', 'fr']) for (const experience of clients) for (const install of ['plugin', 'apm']) for (const mode of [undefined, ...modes]) {
+    const settings = { locale, experience, install, mode, clientVersion: 'saved-client', squadVersion: 'saved-squad', coreVersion: 'saved-core', officeVersion: 'saved-office' }
+    const checked = ['start-0', 'prepare-3', 'product-1', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
+    const migrated = decodeState(JSON.stringify({ schema: 1, checked, settings }))
+    assert.deepEqual(migrated, { schema: 1, checked, settings: { ...settings, mode: 'autopilot' } })
+    assert.deepEqual(decodeState(JSON.stringify(migrated)), migrated, 'migration is idempotent')
   }
 })
 test('new saved settings validate supplied values explicitly, including null and wrong types', () => {
@@ -36,9 +47,10 @@ test('new saved settings validate supplied values explicitly, including null and
   }
   for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of modes) {
     const settings = { ...defaults, locale, experience, mode }
-    assert.deepEqual(decodeState(JSON.stringify({ schema: 1, checked: ['start-0'], settings })).settings, settings)
+    assert.deepEqual(decodeState(JSON.stringify({ schema: 1, checked: ['start-0'], settings })).settings, { ...settings, mode: 'autopilot' })
   }
-  assert.match(stateErrorText('mode', 'fr'), /Mode VS Code enregistré inconnu/)
+  assert.match(stateErrorText('mode', 'en'), /Unknown saved mode/)
+  assert.match(stateErrorText('mode', 'fr'), /Mode enregistré inconnu/)
   assert.match(stateErrorText('locale', 'fr'), /Langue enregistrée inconnue/)
 })
 test('all French lessons preserve stable structure, timing, checkpoint counts and setup dependencies', () => {
@@ -46,7 +58,7 @@ test('all French lessons preserve stable structure, timing, checkpoint counts an
     id: l.id, number: l.number, minutes: l.minutes, checks: l.checks.length,
     steps: l.steps.length, beforeInstall: l.beforeInstall?.length,
     setup: l.setup?.map(s => [s.id, s.request.entry, s.request.lifecycle, s.request.requiresSetup]),
-    launch: l.launch && [l.launch.entry, l.launch.requiresSetup, l.launch.businessMode],
+    launch: l.launch && [l.launch.entry, l.launch.requiresSetup],
   }))
   assert.deepEqual(structure(content.fr), structure(content.en))
   for (const locale of ['en', 'fr']) {
@@ -62,20 +74,27 @@ test('all French lessons preserve stable structure, timing, checkpoint counts an
   }
 })
 for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of modes) {
-  test(`${locale}/${experience}/${mode}: all seven exact request payloads, scope-limited mode and lifecycle`, () => {
+  test(`${locale}/${experience}/${mode}: all seven exact payloads enforce autopilot except init/promote`, () => {
     const c = content[locale]
     const settings = { ...defaults, locale, experience, mode }
     for (const [key, prompt] of Object.entries(allRequests(c))) {
       assert.equal(prompt.text, c.prompts[key])
       const actual = renderPrompt(prompt, settings)
-      if (experience !== 'vscode') { assert.equal(actual, prompt.text); continue }
+      const isLifecycle = ['planningInit', 'promote', 'deliveryInit'].includes(key)
+      assert.equal(Object.hasOwn(prompt, 'businessMode'), false, 'no opt-in business-mode metadata')
+      assert.equal(actual.includes('mode="autopilot"'), !isLifecycle)
+      if (experience !== 'vscode') {
+        assert.equal(actual, isLifecycle ? prompt.text : `mode="autopilot"\n\n${prompt.text}`)
+        assert.doesNotMatch(actual, /^\/|request=/)
+        continue
+      }
       const federation = ['promote', 'deliveryInit', 'implementation', 'resume'].includes(key)
       const lifecycle = key === 'promote' ? ' promote' : key === 'deliveryInit' ? ' init' : ''
-      const optionalMode = ['product', 'implementation'].includes(key) && mode !== 'interactive' ? ` mode=${mode}` : ''
-      const text = ['planningInit', 'promote', 'deliveryInit'].includes(key) ? prompt.text.split('\n\n').slice(1).join('\n\n') : prompt.text
-      assert.equal(actual, `/${federation ? 'squad-federation' : 'squad'}${lifecycle}${optionalMode} request=${JSON.stringify(text)}`)
+      const mandatoryMode = isLifecycle ? '' : ' mode="autopilot"'
+      const text = isLifecycle ? prompt.text.split('\n\n').slice(1).join('\n\n') : prompt.text
+      assert.equal(actual, `/${federation ? 'squad-federation' : 'squad'}${lifecycle}${mandatoryMode} request=${JSON.stringify(text)}`)
       assert.equal(JSON.parse(actual.slice(actual.indexOf('request=') + 8)), text)
-      assert.doesNotMatch(actual, /mode=(interactive|init|promote)|cost-ceiling|^\/\/|request="(?:init|promote)\\n/)
+      assert.doesNotMatch(actual, /mode=(?:"?(?:interactive|autonomous|init|promote)|autopilot)|cost-ceiling|^\/\/|request="(?:init|promote)\\n/)
       assert.ok(!actual.includes('\n'), 'one complete copyable command, with escaped line breaks')
     }
     for (const prompt of [c.repositorySetup, c.installation.apm, c.installation.plugin, c.pdfReadiness.setup]) {
@@ -88,20 +107,35 @@ for (const locale of ['en', 'fr']) for (const experience of clients) for (const 
     assert.equal(missingSetup(launch, ['setup:delivery-team']).length, 2, 'inherited prerequisites still apply')
   })
 }
-test('quote, backslash, CRLF, newline and lifecycle rendering is deterministic and non-mutating', () => {
-  const settings = { ...defaults, experience: 'vscode', mode: 'autopilot' }
+test('future requests, quotes, backslashes and CRLF obey mandatory policy despite direct mode mutation', () => {
   const text = 'Keep "Q3" and C:\\work\\data\nSecond line\r\nFrançais : « résultat »\tfin'
-  for (const entry of ['squad', 'squad-federation']) for (const lifecycle of [undefined, 'init', 'promote']) {
+  const settings = { ...defaults }
+  for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of modes) for (const entry of ['squad', 'squad-federation']) for (const lifecycle of [undefined, 'init', 'promote']) {
+    Object.assign(settings, { locale, experience, mode })
     const prompt = { entry, lifecycle, text: lifecycle ? `${lifecycle}\r\n\r\n${text}` : text }
     const before = JSON.stringify(prompt)
+    const settingsBefore = JSON.stringify(settings)
     const result = renderPrompt(prompt, settings)
-    assert.equal(JSON.parse(result.slice(result.indexOf('request=') + 8)), text)
+    if (experience === 'vscode') {
+      assert.equal(JSON.parse(result.slice(result.indexOf('request=') + 8)), text)
+      assert.equal(result.split(' request=')[0], `/${entry}${entry === 'squad-federation' && lifecycle ? ` ${lifecycle}` : ''}${lifecycle ? '' : ' mode="autopilot"'}`)
+      assert.ok(!/[\r\n]/.test(result), 'JSON escapes request line breaks')
+    } else assert.equal(result, lifecycle ? prompt.text : `mode="autopilot"\n\n${text}`)
     assert.equal(JSON.stringify(prompt), before)
+    assert.equal(JSON.stringify(settings), settingsBefore, 'renderer does not mutate legacy settings')
     assert.equal(result, renderPrompt(prompt, settings))
-    assert.ok(!result.includes('mode='), 'no mode on setup/read-only')
-    assert.equal(result.split(' request=')[0], `/${entry}${entry === 'squad-federation' && lifecycle ? ` ${lifecycle}` : ''}`)
+    assert.equal(result.includes('mode="autopilot"'), !lifecycle, 'only lifecycle metadata excludes mode')
   }
-  assert.equal(JSON.parse(renderPrompt({ text: 'init is a word within ordinary prose', entry: 'squad' }, settings).split('request=')[1]), 'init is a word within ordinary prose')
+  for (const experience of clients) for (const text of ['init is a word within ordinary prose', 'promote the reviewed idea', 'init\n\nThis is an ordinary request without lifecycle metadata']) {
+    const actual = renderPrompt({ text, entry: 'squad' }, { ...defaults, experience, mode: 'interactive' })
+    assert.equal(actual, experience === 'vscode' ? `/squad mode="autopilot" request=${JSON.stringify(text)}` : `mode="autopilot"\n\n${text}`)
+  }
+  for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of modes) {
+    const settings = { ...defaults, locale, experience, mode }
+    const text = 'Future request with no entry: "résultat" and request="quoted" in C:\\work\r\nKeep scope.'
+    assert.equal(renderPrompt({ text }, settings), experience === 'vscode' ? `/squad mode="autopilot" request=${JSON.stringify(text)}` : `mode="autopilot"\n\n${text}`)
+    assert.equal(renderPrompt({ text, shell: true, entry: 'squad' }, settings), text, 'shell metadata takes priority over a supplied entry')
+  }
 })
 test('three roving client tabs wrap both directions with Home and End', () => {
   assert.equal(nextClient('vscode', 'ArrowRight'), 'app')
@@ -154,4 +188,34 @@ test('UI paired keys and French content are authored, not runtime DOM translatio
   assert.match(app, /if \(storageError\) return/)
   for (const prompt of Object.values(content.fr.prompts)) assert.doesNotMatch(prompt, /\/squad|profile=|pack=|owner=|cost-ceiling/)
   assert.deepEqual(toggleCheckpoint('setup:planning-team', ['start-0', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']), ['start-0'])
+})
+test('both languages document mandatory autopilot for every client with lifecycle and approval exceptions', async () => {
+  const running = await load('../RUNNING.txt')
+  for (const locale of ['en', 'fr']) {
+    const t = translator(locale)
+    for (const key of ['modeNote', 'modeScope']) {
+      assert.match(t(key), /init/)
+      assert.match(t(key), /promote/)
+    }
+    assert.match(t('modeScope'), /mode="autopilot"/)
+    assert.match(t('modeNote'), locale === 'fr' ? /obligatoire/ : /required/)
+    assert.match(t('modeNote'), locale === 'fr' ? /lecture seule/ : /read-only/)
+    assert.match(t('modeNote'), locale === 'fr' ? /approbation/ : /approval/)
+    const suffix = locale === 'fr' ? '-fr' : ''
+    const root = `../public/downloads${suffix}/`
+    for (const name of ['report-studio-exercise-brief', 'checkpoint-worksheet', 'federation-handoff']) {
+      const text = await load(`${root}${name}${suffix}.txt`)
+      for (const literal of ['mode="autopilot"', 'App/CLI', 'VS Code', 'init', 'promote']) assert.ok(text.includes(literal), `${locale}/${name}: ${literal}`)
+      assert.doesNotMatch(text, /chosen mode|chosen VS Code mode|mode (?:VS Code )?choisi|Interactive omits|Interactif omet|Optional autonomous|choix autonomous\/autopilot/)
+      if (name === 'report-studio-exercise-brief') {
+        for (const literal of ['/squad mode="autopilot" request="..."', '/squad-federation mode="autopilot" request="..."', '/squad request="..."', '/squad-federation init request="..."', '/squad-federation promote request="..."']) {
+          assert.ok(text.includes(literal), `${locale} brief example: ${literal}`)
+          assert.ok(running.includes(literal), `running example: ${literal}`)
+        }
+        assert.match(text, locale === 'fr' ? /lecture seule/ : /read-only/)
+        assert.match(text, locale === 'fr' ? /approbation/ : /approval/)
+      }
+    }
+  }
+  assert.doesNotMatch(running, /Default interactive|mode interactif par défaut|mode interactif omet|ONLY to product|seulement au produit/)
 })

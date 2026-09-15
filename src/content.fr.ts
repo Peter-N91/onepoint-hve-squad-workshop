@@ -132,7 +132,7 @@ const lessonCopies = {
       checkpoint: 'J’ai confirmé l’équipe de planification et vérifié que son initialisation est terminée.',
     }],
     launchHint: '2. Après avoir réellement confirmé l’équipe, envoyez la demande de travail, puis répondez aux questions utiles.',
-    launch: { title: 'Préparer un plan métier et produit pour revue', entry: 'squad', requiresSetup: ['planning-team'], businessMode: true, text: prompts.product },
+    launch: { title: 'Préparer un plan métier et produit pour revue', entry: 'squad', requiresSetup: ['planning-team'], text: prompts.product },
     behaviors: ['La planification déclenche l’analyse des exigences manquantes ou contradictoires.', 'L’équipe propose des expertises complémentaires et demande les consentements nécessaires.', 'Faits, hypothèses, décisions et expérimentations non exécutées sont distingués ; la revue est identifiable.'],
     steps: [
       { title: 'BRD : vérifier le besoin', body: 'Reliez les objectifs, le périmètre et les contraintes aux sections du cadrage. Word et PowerPoint sont les cibles ; le premier incrément ne couvre pas tout le besoin. Remettez en question au moins une hypothèse sans imposer une répartition interne des rôles.' },
@@ -181,7 +181,7 @@ const lessonCopies = {
     inputs: ['Équipe de réalisation initialisée', 'Backlog et décisions revus, incrément approuvé', 'Jeu JSON synthétique téléchargé ; aucun accès de production requis'],
     concept: 'Le petit incrément Word est une proposition pédagogique à approuver, pas un produit complet imposé. Conservez les deux cibles Office. Implémentation, test du moteur, aperçu web et validation dans l’application sont quatre états distincts.',
     launchHint: '3. Après les deux confirmations, envoyez cette demande séparée. Revoyez et approuvez le plan d’implémentation proposé avant son exécution.',
-    launch: { title: 'Implémenter la première version convenue', entry: 'squad-federation', requiresSetup: ['delivery-team'], businessMode: true, text: prompts.implementation },
+    launch: { title: 'Implémenter la première version convenue', entry: 'squad-federation', requiresSetup: ['delivery-team'], text: prompts.implementation },
     behaviors: ['L’implémentation suit l’incrément et ses dépendances sans élargir discrètement le périmètre.', 'Les ambiguïtés métier et changements significatifs nécessitent une décision humaine.', 'Le bilan distingue exécuté, simulé, bloqué et non exécuté ; les erreurs ne deviennent pas des zéros.'],
     steps: [
       { title: '10:40–11:00 · Approuver le plan', body: 'Confirmez les éléments du backlog et l’application. Sans périmètre revu, convenez d’un incrément avant de construire. Téléchargez le jeu Report Studio et placez-le dans data\\report-studio-fixture.json à la racine du dépôt participant ; créez data si nécessaire. Définissez le contrat : période, périmètre, trois nombres, provenance, date et version.' },

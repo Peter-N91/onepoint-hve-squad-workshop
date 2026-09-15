@@ -7,7 +7,6 @@ export type Prompt = {
   shell?: boolean
   lifecycle?: 'init' | 'promote'
   requiresSetup?: SetupId[]
-  businessMode?: boolean
 }
 export type LifecycleStep = {
   id: SetupId
@@ -164,7 +163,7 @@ export const lessons: Lesson[] = [
       checkpoint: 'I confirmed the planning team and checked that its initialization is complete.',
     }],
     launchHint: '2. After actually confirming the team, send the work request, then answer useful questions.',
-    launch: { title: 'Prepare a business and product plan for review', entry: 'squad', requiresSetup: ['planning-team'], businessMode: true, text: prompts.product },
+    launch: { title: 'Prepare a business and product plan for review', entry: 'squad', requiresSetup: ['planning-team'], text: prompts.product },
     behaviors: ['Planning triggers analysis of missing or conflicting requirements.', 'The team proposes additional expertise and requests the necessary consent.', 'Facts, assumptions, decisions and unexecuted experiments are distinguished; the review is identifiable.'],
     steps: [
       { title: 'BRD: check the need', body: 'Link objectives, scope and constraints to sections of the scoping document. Word and PowerPoint are the targets; the first slice does not cover the whole need. Challenge at least one assumption without imposing an internal allocation of roles.' },
@@ -213,7 +212,7 @@ export const lessons: Lesson[] = [
     inputs: ['Initialized delivery team', 'Reviewed backlog and decisions, approved slice', 'Downloaded synthetic JSON dataset; no production access required'],
     concept: 'The small Word slice is a teaching proposal to approve, not an imposed complete product. Keep both Office targets. Implementation, engine testing, web preview and host validation are four distinct states.',
     launchHint: '3. After both confirmations, send this separate request. Review and approve the proposed implementation plan before it is executed.',
-    launch: { title: 'Implement the agreed first release', entry: 'squad-federation', requiresSetup: ['delivery-team'], businessMode: true, text: prompts.implementation },
+    launch: { title: 'Implement the agreed first release', entry: 'squad-federation', requiresSetup: ['delivery-team'], text: prompts.implementation },
     behaviors: ['Implementation follows the slice and its dependencies without silently expanding scope.', 'Business ambiguities and significant changes require a human decision.', 'The summary distinguishes executed, simulated, blocked and not executed; errors do not become zeros.'],
     steps: [
       { title: '10:40–11:00 · Approve the plan', body: 'Confirm the backlog items and host. Without reviewed scope, agree a slice before building. Download the Report Studio dataset and place it in data\\report-studio-fixture.json at the participant repository root; create data if needed. Define the contract: period, scope, three numbers, provenance, date and version.' },

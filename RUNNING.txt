@@ -33,7 +33,7 @@ This check uses an isolated Edge profile in artifacts, an ephemeral local
 server and CDP APIs through Node; no new dependencies or shared browser.
 EDGE_PATH can select another compatible Chromium executable.
 It checks English/French x App/CLI/VS Code, subpath hosting, three-tab keyboard
-operation, confirmations, exact Copy payloads, all modes, export, reset,
+operation, confirmations, exact Copy payloads, legacy mode migration, export, reset,
 themes, localized negative cases, mobile layout and standalone HTML.
 It also checks the Qubix brand, original logo, separate pre-work,
 Part 03 live start at 09:00 and print/portable timing and embedded logo.
@@ -43,7 +43,7 @@ The build produces:
   dist\index.html and assets: Pages-compatible static site.
   dist\onepoint-workshop-portable.html: standalone variant with scripts,
   styles, original SVG logo, license and eight downloads (four per language)
-  embedded, with both languages and all client/mode choices,
+  embedded, with both languages, all clients and mandatory autopilot,
   directly openable in a browser with no logo fetch.
 The portable variant is an ordinary local file, not a version intended
 for secure OneDrive/SharePoint preview. Local persistence depends on the
@@ -135,8 +135,9 @@ versions: enter no secrets, private information or scoping documents.
 Reset requires a second choice and affects only this workshop.
 The bilingual update preserves lesson IDs, setup IDs, schema 1 and the
 localStorage key. Existing self-reported progress stays compatible.
-Schema-1 exports without locale or mode load with English and interactive
-VS Code defaults, preserving client/install/versions/checks. Supplied invalid
+Schema-1 exports without locale load with English. Missing mode and valid
+legacy interactive/autonomous/autopilot modes normalize to autopilot for
+every client, preserving locale/client/install/versions/checks. Supplied invalid
 locale or mode is explicitly rejected, not silently replaced. Read errors
 suspend all saving; changing language does not hide the error or overwrite
 the damaged data. The reset confirmation alone removes this workshop's key.
@@ -170,28 +171,36 @@ or resolve duplicates with approval. Switching tabs installs nothing and
 does not change the saved App/CLI plug-in/APM choice.
 
 VS Code main blocks are COMPLETE COPYABLE commands, not terminal commands:
-  readiness: /squad request="..."
+  readiness: /squad mode="autopilot" request="..."
   planning init: /squad request="..." (no leading init line or init flag)
-  product: /squad request="..."
+  product: /squad mode="autopilot" request="..."
   promotion: /squad-federation promote request="..."
   delivery init: /squad-federation init request="..."
-  implementation: /squad-federation request="..."
-  read-only resume: /squad-federation request="..."
+  implementation: /squad-federation mode="autopilot" request="..."
+  read-only resume: /squad-federation mode="autopilot" request="..."
 The ellipses above describe syntax only; use the full guide blocks.
 Quotes, backslashes and newlines are JSON-escaped in request.
-App/CLI keep the original plain requests and /agent/list selection.
-Default interactive omits mode. Explicit autonomous/autopilot selection
-adds mode=autonomous or mode=autopilot ONLY to product and implementation.
-Autonomous uses a bounded auto-validated review loop with escalation;
-autopilot performs research-plan-implement-review, still requiring
-impactful-action approvals and final outcome validation. Untargeted
+MANDATORY WORKSHOP POLICY — ALL CLIENTS (App, CLI and VS Code)
+Use exact mode="autopilot" on every request except init and promote:
+readiness, product, implementation, read-only resumption and future requests.
+App/CLI retain /agent/list selection and prepend this line plus a blank line
+to the original non-lifecycle request (no slash wrapper):
+  mode="autopilot"
+
+  <complete request text>
+App/CLI init/promote messages remain unchanged, without mode. VS Code uses
+the commands above, omitting mode only on init/promote. Shell installation
+commands remain unchanged. There is no optional workshop mode selector.
+Autopilot does not enlarge the request scope: readiness/resumption remain
+read-only, and requested stops, plan approvals, impactful-action approvals
+and final outcome validation remain required. Untargeted
 federation autopilot can span the meta-selected sub-squads. A real registered
 squad target narrows routing; the guide never invents that name.
 Optional reference: request; federation squad; init profile; single-squad
 pack; discovery quick|standard|deep|skip where applicable; tier fast|default;
 owner as an existing roster member. These hints are omitted by default.
 No mode=interactive, mode=init, mode=promote or cost-ceiling is supported here.
-Modes do not unlock self-report Copy gates or grant any approval.
+Mandatory autopilot does not unlock self-report Copy gates or grant approval.
 The guide has been browser-simulated, not dispatched in an actual VS Code
 host. Verify installed prompt discovery and real behavior separately.
 
@@ -209,11 +218,13 @@ Choisissez Français dans le sélecteur visible. L’anglais est la langue par
 défaut. Le choix traduit les leçons, demandes, menus, textes accessibles,
 messages, erreurs, supports, données synthétiques et impression.
 Les mentions légales originales restent à l’identique en anglais.
-La langue, le client, la méthode d’installation, le mode, les versions et
+La langue, le client, la méthode d’installation, le mode obligatoire, les versions et
 les cases restent dans le navigateur ; aucun envoi à l’animateur.
 Changer de langue conserve la page, le client, les cases et les erreurs.
-Les anciens états de schéma 1 conservent tous leurs champs et utilisent
-l’anglais et le mode interactif par défaut. Une langue ou un mode enregistré
+Les anciens états de schéma 1 conservent langue, client, installation,
+versions et cases. Sans langue, l’anglais s’applique. Le mode absent ou
+valide (interactive, autonomous, autopilot) devient autopilot pour tous les
+clients. Une langue ou un mode enregistré
 invalide provoque une erreur explicite et suspend l’enregistrement.
 ?lang=en ou ?lang=fr impose la langue à l’ouverture. Une valeur d’URL
 invalide utilise l’anglais et avertit sans effacer la progression.
@@ -263,17 +274,27 @@ distributions : inspectez les ressources, utilisez un dépôt propre et un
 profil VS Code approuvé sans plug-ins en double, ou résolvez-les avec accord.
 L’onglet ne change pas la préférence plug-in/APM de l’App/CLI.
 Les blocs principaux sont des commandes complètes, à coller dans Chat :
-/squad request="..." pour vérification, initialisation de planification et
-travail produit ; /squad-federation promote request="..." pour promotion ;
-/squad-federation init request="..." pour réalisation ;
-/squad-federation request="..." pour implémentation et reprise.
+/squad mode="autopilot" request="..." pour vérification et travail produit ;
+/squad request="..." pour initialisation de planification ;
+/squad-federation promote request="..." pour promotion ;
+/squad-federation init request="..." pour initialisation de réalisation ;
+/squad-federation mode="autopilot" request="..." pour implémentation et reprise.
 Ces points de suspension expliquent la syntaxe ; copiez le bloc complet du
 guide. L’initialisation d’équipe unique n’a pas de drapeau init autonome.
-Le mode interactif omet mode. autonomous et autopilot sont des choix
-explicites, appliqués seulement au produit et à l’implémentation.
-Autonomous : boucle de revue bornée et auto-validée, escalade obligatoire.
-Autopilot : recherche-planification-implémentation-revue, avec approbations
-d’actions à impact et validation finale. Sans cible squad réelle enregistrée,
+RÈGLE OBLIGATOIRE — TOUS LES CLIENTS (App, CLI et VS Code)
+Utilisez exactement mode="autopilot" pour toute demande sauf init et promote :
+vérification, produit, implémentation, reprise en lecture seule et demandes futures.
+App/CLI : conservez la sélection /agent ou la liste de l’App, puis ajoutez
+cette ligne et une ligne vide avant le texte de la demande, sans commande slash :
+  mode="autopilot"
+
+  <texte complet de la demande>
+Les messages init/promote restent inchangés et sans mode. Les commandes
+d’installation shell restent inchangées. Aucun sélecteur de mode facultatif.
+Autopilot n’élargit pas le périmètre demandé : la vérification et la reprise
+restent en lecture seule. Les arrêts demandés, l’approbation du plan, les
+approbations d’actions à impact et la validation finale restent nécessaires.
+Sans cible squad réelle enregistrée,
 la fédération peut coordonner plusieurs sous-équipes sélectionnées.
 Les paramètres facultatifs sont documentés dans le guide et omis des
 demandes : squad (fédération), profile (initialisation), pack (équipe unique),

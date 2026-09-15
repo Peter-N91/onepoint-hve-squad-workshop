@@ -8,7 +8,8 @@ Date du test :
 Dépôt participant :
 Client Copilot / version :
 Versions réelles HVE Squad / HVE Core ou révisions APM :
-Langue des demandes / mode VS Code choisi (si applicable) :
+Langue des demandes :
+Mode obligatoire de l’atelier à consigner — mode="autopilot" (App/CLI/VS Code ; sauf init/promote) :
 Système / application Office / version / ensembles de spécifications :
 Périmètre et éléments du backlog choisis :
 Source de cadrage locale / version / sections :

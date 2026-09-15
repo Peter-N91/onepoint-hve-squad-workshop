@@ -5,7 +5,8 @@ Keep the completed worksheet in the participant project; do not publish it with 
 Date / author:
 Participant repository:
 Conversation or context to resume:
-Client / language / chosen mode:
+Client / language:
+Mandatory workshop mode record — mode="autopilot" (App/CLI/VS Code; except init/promote):
 Planning team actually created / path:
 Initialization confirmation:
 Confirmed promotion / preserved paths and artifacts:

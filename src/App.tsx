@@ -1,7 +1,7 @@
 import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { lessons as canonicalLessons, lifecycleSteps as canonicalSteps } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
-import { agentSelection, clients, decodeState, defaults, missingSetup, modes, nextClient, renderPrompt, setupCheckId, storageKey, toggleCheckpoint } from './state'
+import { agentSelection, autopilotDirective, clients, decodeState, defaults, missingSetup, nextClient, renderPrompt, setupCheckId, storageKey, toggleCheckpoint } from './state'
 import type { SavedState, Settings } from './state'
 import { content } from './locales'
 import { isLocale, localeNames, numberLocales, StateError, stateErrorText } from './language'
@@ -167,7 +167,7 @@ function App() {
   function renderPromptBlock(prompt: Prompt) {
     const pending = missingSetup(prompt, saved.checked).map(step => lifecycleSteps.find(local => local.id === step.id)!)
     const rendered = renderPrompt(prompt, saved.settings)
-    return <div className="prompt-block" data-prompt-kind={prompt.shell ? 'shell' : prompt.lifecycle ?? (prompt.businessMode ? 'business' : 'read-only')}>
+    return <div className="prompt-block" data-prompt-kind={prompt.shell ? 'shell' : prompt.lifecycle ?? 'request'}>
       <div className="prompt-toolbar"><span>{t(prompt.shell ? 'shell' : prompt.lifecycle ? 'lifecycle' : 'business')}</span>
         <button type="button" aria-label={`${t('copy')}: ${prompt.title}`} disabled={pending.length > 0} onClick={() => copy(rendered)}>{t('copy')}</button></div>
       <h4>{prompt.title}</h4>
@@ -265,7 +265,7 @@ function App() {
         <div className="discussion-note"><span className="eyebrow">{t('protectedTime')}</span><strong>12:00–12:30</strong><span>{t('stopBuilding')}</span></div>
       </aside>
       <main id="main" className="main-content" ref={heading} tabIndex={-1}>
-        <div className="print-only print-heading"><div className="print-brand"><img className="brand-mark" src={logoUrl} alt={t('logo')} width="48" height="48" /><strong>onepoint · {t('title')}</strong></div><p>{t('date')} · 09:00–12:30 CEST · Discussion 12:00–12:30</p><p>{localeNames[locale]} · {saved.settings.experience === 'vscode' ? 'VS Code' : saved.settings.experience === 'cli' ? 'Copilot CLI' : 'Copilot App'}{saved.settings.experience === 'vscode' ? ` · ${t(saved.settings.mode)}` : ''}</p><PreworkPanel /><LiveAgenda /></div>
+        <div className="print-only print-heading"><div className="print-brand"><img className="brand-mark" src={logoUrl} alt={t('logo')} width="48" height="48" /><strong>onepoint · {t('title')}</strong></div><p>{t('date')} · 09:00–12:30 CEST · Discussion 12:00–12:30</p><p>{localeNames[locale]} · {saved.settings.experience === 'vscode' ? 'VS Code' : saved.settings.experience === 'cli' ? 'Copilot CLI' : 'Copilot App'} · {t('autopilot')}</p><p><code>{autopilotDirective}</code> · {t('modeScope')}</p><PreworkPanel /><LiveAgenda /></div>
         <div className="content-toolbar">
           <div className="segmented" role="tablist" aria-label={t('client')}>{clients.map(value => <button type="button" role="tab" id={`experience-${value}`} key={value} aria-selected={saved.settings.experience === value} aria-controls="experience-panel" tabIndex={saved.settings.experience === value ? 0 : -1} onClick={() => updateSetting('experience', value)} onKeyDown={event => {
             const next = nextClient(value, event.key)
@@ -276,12 +276,14 @@ function App() {
         <section className="experience-panel" id="experience-panel" role="tabpanel" aria-labelledby={`experience-${saved.settings.experience}`} tabIndex={0}>
           {saved.settings.experience === 'vscode' ? <div className="vscode-panel">
             <span className="eyebrow">{t('vscodeCaption')}</span><h2>{selection.identifier}</h2><p>{selection.instruction}</p><p>{t('vscodeUse')}</p><a href="#prepare">{t('installSequence')}</a>
-            <label className="mode-select">{t('businessMode')}<select data-testid="business-mode" value={saved.settings.mode} onChange={event => { const value = event.target.value; if (value === 'interactive' || value === 'autonomous' || value === 'autopilot') updateSetting('mode', value) }}>{modes.map(mode => <option value={mode} key={mode}>{t(mode)}</option>)}</select></label>
-            <p className="small">{t('modeScope')}</p>{saved.settings.mode === 'autopilot' && <p className="notice warning">{t('autopilotWarning')}</p>}
-            <details><summary>{t('modeSummary')}</summary><p>{t('modeNote')}</p><p>{t('autopilotWarning')}</p></details>{renderVscodeReference()}
+            {renderVscodeReference()}
           </div> : page === 'prepare' ? <div><span className="eyebrow">{t('prepareProject')}</span><h2>{t('installSequence')}</h2><p>{t('installSequenceNote')}</p><p className="small">{t('tabsNote')}</p></div> :
             <div><span className="eyebrow">{t('selectAgent')}</span><h2>{selection.name}</h2><p>{selection.instruction}</p><p className="small">{t('lookFor')}: <code>{selection.identifier}</code>. {t('labelsNote')}</p></div>}
           {page !== 'prepare' && saved.settings.experience === 'cli' && <button type="button" onClick={() => copy('/agent')}>{t('copy')} /agent</button>}
+        </section>
+        <section className="notice" data-testid="autopilot-policy" aria-label={t('autopilot')}>
+          <strong>{t('autopilot')} · <code>{autopilotDirective}</code></strong><p>{t('modeScope')}</p>
+          <details><summary>{t('modeSummary')}</summary><p>{t('modeNote')}</p><p>{t('autopilotWarning')}</p></details>
         </section>
         {invalidUrlLanguage && <p className="notice">{t('urlLanguage')}</p>}
         {storageError && <div className="notice warning" role="alert">{t(storageError.kind === 'load' ? 'loadError' : 'saveError')}{storageError.code && <p>{stateErrorText(storageError.code, locale, storageError.detail)}</p>}<button type="button" onClick={() => setResetOpen(true)}>{t('reviewReset')}</button></div>}
@@ -301,7 +303,7 @@ function App() {
         </article> : <section><h1>{t('notFound')}</h1><p>{t('notFoundNote')}</p><a href="#overview">{t('returnOverview')}</a></section>}
         {active && <nav className="lesson-navigation" aria-label={t('previousNext')}><a href={`#${previousLesson?.id ?? 'overview'}`}>← {previousLesson?.title ?? t('overview')}</a><a className="button primary" href={`#${nextLesson?.id ?? 'resources'}`}>{active.id === 'prepare' ? t('ready') : nextLesson?.title ?? t('resources')} →</a></nav>}
         {lessons.map(lesson => renderLesson(lesson, true))}<Lab printOnly />
-        <section className="print-only print-sources"><h2>{t('sourcesMaterials')}</h2><p>{t('printNote')}</p>{saved.settings.experience === 'vscode' && <><p>{t('vscodeUse')}</p><p>{t('modeNote')}</p><p>{t('autopilotWarning')}</p><p>{t('parametersNote')}</p><ul>{(['paramRequest', 'paramSquad', 'paramProfile', 'paramPack', 'paramDiscovery', 'paramTier', 'paramOwner'] as const).map(key => <li key={key}>{t(key)}</li>)}</ul></>}<ul>{sources.map(source => <li key={source.url}>{source.name}: {source.url}</li>)}</ul><h3>{t('license')}</h3><pre className="brand-notice" lang="en">{brandNotice}</pre></section>
+        <section className="print-only print-sources"><h2>{t('sourcesMaterials')}</h2><p>{t('printNote')}</p><p>{t('modeNote')}</p><p>{t('autopilotWarning')}</p>{saved.settings.experience === 'vscode' && <><p>{t('vscodeUse')}</p><p>{t('parametersNote')}</p><ul>{(['paramRequest', 'paramSquad', 'paramProfile', 'paramPack', 'paramDiscovery', 'paramTier', 'paramOwner'] as const).map(key => <li key={key}>{t(key)}</li>)}</ul></>}<ul>{sources.map(source => <li key={source.url}>{source.name}: {source.url}</li>)}</ul><h3>{t('license')}</h3><pre className="brand-notice" lang="en">{brandNotice}</pre></section>
         <footer><span>onepoint · {t('workshop')}</span><span>{t('date')} · {t('baseline')}</span></footer>
       </main>
     </div>

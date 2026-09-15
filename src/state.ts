@@ -4,7 +4,9 @@ import { isLocale, StateError } from './language.ts'
 import type { Locale } from './language.ts'
 
 export const clients = ['app', 'cli', 'vscode'] as const
+// Accept previous selections when restoring progress; the workshop now requires autopilot.
 export const modes = ['interactive', 'autonomous', 'autopilot'] as const
+export const autopilotDirective = 'mode="autopilot"'
 export type Mode = typeof modes[number]
 export type Settings = {
   experience: typeof clients[number]
@@ -19,7 +21,7 @@ export type Settings = {
 export type SavedState = { schema: 1; checked: string[]; settings: Settings }
 export const defaults: Settings = {
   experience: 'cli', install: 'plugin', clientVersion: '', squadVersion: '',
-  coreVersion: '', officeVersion: '', locale: 'en', mode: 'interactive',
+  coreVersion: '', officeVersion: '', locale: 'en', mode: 'autopilot',
 }
 export const storageKey = 'onepoint-hve-workshop-2026-09-17-v1'
 export function setupCheckId(id: SetupId): string {
@@ -68,7 +70,6 @@ export function decodeState(raw: string | null): SavedState {
   settings.experience = input.experience
   settings.install = input.install
   if (isLocale(input.locale)) settings.locale = input.locale
-  if (input.mode === 'interactive' || input.mode === 'autonomous' || input.mode === 'autopilot') settings.mode = input.mode
   return { schema: 1, checked: [...new Set(data.checked)], settings }
 }
 export function toggleCheckpoint(id: string, current: string[]) {
@@ -100,7 +101,10 @@ export function agentSelection(entry: Prompt['entry'], settings: Settings) {
   }
 }
 export function renderPrompt(prompt: Prompt, settings: Settings = defaults): string {
-  if (prompt.shell || settings.experience !== 'vscode') return prompt.text
+  if (prompt.shell) return prompt.text
+  if (settings.experience !== 'vscode') {
+    return prompt.lifecycle ? prompt.text : `${autopilotDirective}\n\n${prompt.text}`
+  }
   let text = prompt.text
   if (prompt.lifecycle) {
     const end = text.indexOf('\n')
@@ -108,7 +112,7 @@ export function renderPrompt(prompt: Prompt, settings: Settings = defaults): str
   }
   const entry = prompt.entry ?? 'squad'
   const lifecycle = entry === 'squad-federation' && prompt.lifecycle ? ` ${prompt.lifecycle}` : ''
-  const mode = prompt.businessMode && !prompt.lifecycle && settings.mode !== 'interactive' ? ` mode=${settings.mode}` : ''
+  const mode = prompt.lifecycle ? '' : ` ${autopilotDirective}`
   // JSON string quoting keeps quotes, backslashes and multiline requests in one argument.
   return `/${entry}${lifecycle}${mode} request=${JSON.stringify(text)}`
 }

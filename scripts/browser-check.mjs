@@ -7,7 +7,27 @@ import { pathToFileURL } from 'node:url'
 import { agenda, prework, prompts } from '../src/content.ts'
 import { content } from '../src/locales.ts'
 import { translator } from '../src/ui.ts'
-import { defaults, renderPrompt, storageKey } from '../src/state.ts'
+import { clients, defaults, modes, renderPrompt, storageKey } from '../src/state.ts'
+
+function expectedPrompt(prompt, settings) {
+  if (prompt.shell) return prompt.text
+  if (settings.experience !== 'vscode') return prompt.lifecycle ? prompt.text : `mode="autopilot"\n\n${prompt.text}`
+  const text = prompt.lifecycle ? prompt.text.replace(/^(?:init|promote)\r?\n\r?\n/, '') : prompt.text
+  const entry = prompt.entry ?? 'squad'
+  return `/${entry}${entry === 'squad-federation' && prompt.lifecycle ? ` ${prompt.lifecycle}` : ''}${prompt.lifecycle ? '' : ' mode="autopilot"'} request=${JSON.stringify(text)}`
+}
+
+function requestCases(c) {
+  return [
+    ['prepare', '.exercise-list .prompt-block', c.lessons.find(l => l.id === 'prepare').steps.at(-1).prompt],
+    ['product', '[data-setup-id="planning-team"] .prompt-block', c.lifecycleSteps[0].request],
+    ['product', '.phase-launch .prompt-block', c.lessons.find(l => l.id === 'product').launch],
+    ['federation', '[data-setup-id="promote"] .prompt-block', c.lifecycleSteps[1].request],
+    ['federation', '[data-setup-id="delivery-team"] .prompt-block', c.lifecycleSteps[2].request],
+    ['implementation', '.phase-launch .prompt-block', c.lessons.find(l => l.id === 'implementation').launch],
+    ['resume', '.exercise-list .prompt-block', c.lessons.find(l => l.id === 'resume').steps[0].prompt],
+  ]
+}
 
 // Independent local check through Edge/CDP, without touching the shared browser.
 const edge = process.env.EDGE_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
@@ -124,14 +144,14 @@ try {
   await call('Page.reload')
   await waitFor(() => evaluate(`!!document.querySelector('.hero h1')`), 'reset test progress after pre-work assertions')
   await go('product')
-  await check('09:00 opens Part 03 planning init then product request', `${visibleLesson}.querySelector('.big-number').textContent==='03' && ${visibleLesson}.querySelector('.eyebrow').textContent.includes('09:00–10:00 CEST · 60 live minutes') && ${visibleLesson}.querySelector('[data-setup-id="planning-team"] pre').textContent===${JSON.stringify(prompts.planningInit)} && ${visibleLesson}.querySelector('.phase-launch pre').textContent===${JSON.stringify(prompts.product)}`)
+  await check('09:00 opens Part 03 planning init then mandatory autopilot product request', `${visibleLesson}.querySelector('.big-number').textContent==='03' && ${visibleLesson}.querySelector('.eyebrow').textContent.includes('09:00–10:00 CEST · 60 live minutes') && ${visibleLesson}.querySelector('[data-setup-id="planning-team"] pre').textContent===${JSON.stringify(prompts.planningInit)} && ${visibleLesson}.querySelector('.phase-launch pre').textContent===${JSON.stringify('mode="autopilot"\n\n' + prompts.product)}`)
   await check('Product copy blocked before confirmation', `${visibleLesson}.querySelector('.phase-launch button').disabled`)
   await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copied=text}}})`)
   await click(`${visibleLesson}.querySelector('[data-setup-id="planning-team"] input')`)
   await check('Planning confirmation unlocks copy', `!${visibleLesson}.querySelector('.phase-launch button').disabled`)
   await click(`${visibleLesson}.querySelector('.phase-launch button')`)
-  assert.equal(await evaluate('window.__copied'), prompts.product)
-  results.push('Exact product request copied, without internal instructions')
+  assert.equal(await evaluate('window.__copied'), 'mode="autopilot"\n\n' + prompts.product)
+  results.push('Exact product request copied with mandatory autopilot, without other internal instructions')
   await go('federation')
   await check('Delivery init copy blocked before promotion', `${visibleLesson}.querySelector('[data-setup-id="delivery-team"] button').disabled`)
   await click(`${visibleLesson}.querySelector('[data-setup-id="promote"] input')`)
@@ -273,34 +293,50 @@ try {
     await sleep(100)
   }
   const setLanguage = locale => changeSelect('[data-testid="language"]', locale)
-  const setMode = mode => changeSelect('[data-testid="business-mode"]', mode)
   const screenshot = async name => writeFile(resolve(output, name + '.png'), Buffer.from((await call('Page.captureScreenshot', { format: 'png' })).data, 'base64'))
-  const seed = async settings => {
-    await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(JSON.stringify({ schema: 1, checked: [], settings }))})`)
+  const seed = async (settings, checked = []) => {
+    await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(JSON.stringify({ schema: 1, checked, settings }))})`)
     await call('Page.reload')
     await waitFor(() => evaluate(`!!document.querySelector('[data-testid="language"]')`), 'load matrix settings')
     await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__copied=text}}})`)
   }
   const assertCopy = async (label, selector, prompt, settings) => {
-    const expected = renderPrompt(prompt, settings)
+    const expected = expectedPrompt(prompt, settings)
+    assert.equal(renderPrompt(prompt, settings), expected, label + ' independently specified renderer contract')
     assert.equal(await evaluate(`${selector}.querySelector('pre').textContent`), expected, label + ' visible code')
     await click(`${selector}.querySelector('.prompt-toolbar button')`)
     assert.equal(await evaluate('window.__copied'), expected, label + ' clipboard')
     results.push(label + ' — exact visible and Copy payload')
   }
   const visibleArticle = `document.querySelector('article:not(.print-only)')`
+  const assertPolicy = async (label, locale) => {
+    await check(label + ' mandatory policy visible with no optional mode selector', `(()=>{const policy=document.querySelector('[data-testid="autopilot-policy"]');return !!policy && policy.getClientRects().length>0 && policy.textContent.includes('mode="autopilot"') && policy.textContent.includes('init') && policy.textContent.includes('promote') && !document.querySelector('[data-testid="business-mode"]') && ![...document.querySelectorAll('select option')].some(option=>['interactive','autonomous'].includes(option.value))})()`)
+    const text = await evaluate(`document.querySelector('[data-testid="autopilot-policy"]').textContent`)
+    assert.match(text, locale === 'fr' ? /obligatoire/i : /mandatory|required|must/i, label + ' mandatory wording')
+    assert.match(text, locale === 'fr' ? /approbation/i : /approval/i, label + ' approvals retained')
+    assert.match(text, locale === 'fr' ? /périmètre|lecture seule/i : /scope|read.only/i, label + ' scope retained')
+    results.push(label + ' localized mandatory rule retains approvals and scope')
+  }
+  const assertPrintPolicy = async (label, locale, experience) => {
+    const t = translator(locale)
+    await check(label + ' print header and sources state mandatory autopilot for every client', `document.querySelector('.print-heading').textContent.includes('mode="autopilot"') && document.querySelector('.print-sources').textContent.includes(${JSON.stringify(t('modeNote'))}) && !document.querySelector('[data-testid="business-mode"]')`)
+    for (const [page, selector, prompt] of requestCases(content[locale])) {
+      const number = content[locale].lessons.find(l => l.id === page).number
+      const actual = await evaluate(`[...document.querySelectorAll('.lesson.print-only')].find(lesson=>lesson.querySelector('.big-number').textContent===${JSON.stringify(number)}).querySelector(${JSON.stringify(selector + ' pre')}).textContent`)
+      assert.equal(actual, expectedPrompt(prompt, { experience }), label + ' print ' + page + '/' + (prompt.lifecycle ?? 'request'))
+    }
+    results.push(label + ' all seven printed commands enforce policy with lifecycle exceptions')
+  }
   const testPages = ['overview', 'start', 'prepare', 'product', 'federation', 'implementation', 'resume', 'discussion', 'lab', 'resources']
-  const variants = [
-    ['app', 'interactive'], ['cli', 'interactive'], ['vscode', 'interactive'],
-    ['vscode', 'autonomous'], ['vscode', 'autopilot'],
-  ]
   for (const locale of ['en', 'fr']) {
     const c = content[locale]
     const t = translator(locale)
-    for (const [experience, mode] of variants) {
+    for (const experience of clients) {
+      const mode = 'autopilot'
       const settings = { ...defaults, locale, experience, mode, clientVersion: 'QA version', coreVersion: 'QA core', squadVersion: 'QA squad', officeVersion: 'Not executed' }
       const tag = `${locale}/${experience}/${mode}`
       await seed(settings)
+      await assertPolicy(tag, locale)
       await check(`${tag} document metadata and three accessible tabs`, `document.documentElement.lang===${JSON.stringify(locale)} && document.title===${JSON.stringify('onepoint | ' + t('title'))} && document.querySelectorAll('[role="tab"]').length===3 && document.querySelectorAll('[role="tab"][tabindex="0"]').length===1 && document.getElementById('experience-${experience}').getAttribute('aria-selected')==='true' && document.querySelector('[role="tabpanel"]').getAttribute('aria-labelledby')==='experience-${experience}'`)
       if (experience === 'vscode') {
         for (const [key, expected] of [['End', 'vscode'], ['ArrowRight', 'app'], ['ArrowLeft', 'vscode'], ['Home', 'app'], ['ArrowRight', 'cli'], ['ArrowRight', 'vscode']]) {
@@ -309,12 +345,14 @@ try {
           await check(`${tag} keyboard ${key} → ${expected}`, `document.activeElement.id==='experience-${expected}' && document.querySelectorAll('[role="tab"][tabindex="0"]').length===1 && document.getElementById('experience-${expected}').getAttribute('aria-selected')==='true'`)
         }
         await go('implementation')
-        await check(`${tag} chosen mode cannot unlock implementation`, `${visibleLesson}.querySelector('.phase-launch button').disabled && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.length===0`)
       }
+      await go('implementation')
+      await check(`${tag} mandatory autopilot cannot unlock implementation`, `${visibleLesson}.querySelector('.phase-launch button').disabled && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.length===0`)
       for (const hash of testPages) {
         await go(hash)
         const title = hash === 'overview' ? t('title') : hash === 'lab' ? 'Report Studio' : hash === 'resources' ? t('resources') : c.lessons.find(l => l.id === hash).title
         await check(`${tag} localized page ${hash}`, `document.querySelector('h1').textContent===${JSON.stringify(title)} && document.documentElement.lang===${JSON.stringify(locale)}`)
+        await assertPolicy(`${tag}/${hash}`, locale)
       }
       await go('prepare')
       await assertCopy(`${tag} readiness`, `${visibleLesson}.querySelector('.exercise-list .prompt-block')`, c.lessons.find(l => l.id === 'prepare').steps.at(-1).prompt, settings)
@@ -336,16 +374,13 @@ try {
       await check(`${tag} readiness check stays inside product hour`, `${visibleLesson}.textContent.includes('09:00–09:10') && ${visibleLesson}.querySelector('.eyebrow').textContent.includes('09:00–10:00')`)
       await assertCopy(`${tag} planning initialization`, `${visibleLesson}.querySelector('[data-setup-id="planning-team"] .prompt-block')`, product.setup[0].request, settings)
       await check(`${tag} product blocked before self-report`, `${visibleLesson}.querySelector('.phase-launch button').disabled`)
-      if (experience === 'vscode') {
-        await setMode(mode === 'autopilot' ? 'autonomous' : 'autopilot')
-        await check(`${tag} mode change still blocked`, `${visibleLesson}.querySelector('.phase-launch button').disabled`)
-        await setMode(mode)
-      }
+      await check(`${tag} no optional mode can bypass product confirmation`, `!document.querySelector('[data-testid="business-mode"]') && ${visibleLesson}.querySelector('.phase-launch button').disabled`)
       await click(`${visibleLesson}.querySelector('[data-setup-id="planning-team"] input')`)
       await click(`${visibleLesson}.querySelector('[data-check-id="product-0"]')`)
       await assertCopy(`${tag} product`, `${visibleLesson}.querySelector('.phase-launch .prompt-block')`, product.launch, settings)
       const beforeLanguage = await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)}))`)
       await setLanguage(locale === 'en' ? 'fr' : 'en')
+      await assertPolicy(tag + ' switched language', locale === 'en' ? 'fr' : 'en')
       await check(`${tag} language preserves page, client, mode, progress and status`, `location.hash==='#product' && document.getElementById('experience-${experience}').getAttribute('aria-selected')==='true' && JSON.stringify(JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked)===${JSON.stringify(JSON.stringify(beforeLanguage.checked))} && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.mode===${JSON.stringify(mode)} && document.querySelector('.status').textContent===${JSON.stringify(translator(locale === 'en' ? 'fr' : 'en')('copied'))}`)
       await setLanguage(locale)
       await go('federation')
@@ -380,7 +415,8 @@ try {
         await call('Emulation.setEmulatedMedia', { media: 'print' })
         await check(`${tag} ${theme} print contains localized lessons, sources, logo and Qubix palette`, `document.querySelectorAll('.lesson.print-only').length===7 && [...document.querySelectorAll('.lesson.print-only')].every(el=>getComputedStyle(el).display!=='none') && document.querySelector('.print-sources h2').textContent===${JSON.stringify(t('sourcesMaterials'))} && document.querySelector('.print-heading img').naturalWidth===64 && getComputedStyle(document.body).backgroundColor==='rgb(255, 255, 255)' && getComputedStyle(document.documentElement).getPropertyValue('--cp-accent').trim()==='#08764f'`)
         assert.equal(await evaluate(`document.querySelector('.lesson.print-only .big-number').textContent`), '01')
-        assert.equal(await evaluate(`document.querySelectorAll('.lesson.print-only')[2].querySelector('.phase-launch pre').textContent`), renderPrompt(product.launch, settings), tag + ' print command')
+        assert.equal(await evaluate(`document.querySelectorAll('.lesson.print-only')[2].querySelector('.phase-launch pre').textContent`), expectedPrompt(product.launch, settings), tag + ' print command')
+        await assertPrintPolicy(`${tag}/${theme}`, locale, experience)
         if (experience === 'vscode' && mode === 'autopilot') { await evaluate('scrollTo(0,0)'); await screenshot(`onepoint-${locale}-print-${theme}`) }
         await call('Emulation.setEmulatedMedia', { media: '' })
       }
@@ -419,7 +455,7 @@ try {
     assert.equal(exported.storageKey, storageKey)
     assert.equal(exported.page, 'resources')
     assert.deepEqual(exported.checked, ['product-0'])
-    results.push(locale + ' export contains restore metadata, selected language/client/mode and unchanged IDs')
+    results.push(locale + ' export contains restore metadata, selected language/client, canonical autopilot and unchanged IDs')
     await evaluate(`Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('QA blocked')}}})`)
     await go('resume')
     await click(`${visibleLesson}.querySelector('.prompt-toolbar button')`)
@@ -427,17 +463,38 @@ try {
     await go('invalid-page')
     await check(`${locale} localized missing page`, `document.querySelector('h1').textContent===${JSON.stringify(t('notFound'))}`)
   }
+  // Imported legacy preferences must never weaken the workshop's mandatory policy.
+  const migratedChecks = ['start-0', 'prepare-3', 'product-1', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
+  for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of [undefined, ...modes]) {
+    const tag = `${locale}/${experience}/legacy-${mode ?? 'missing'}`
+    const settings = { ...defaults, locale, experience, mode, install: 'apm', clientVersion: 'legacy-client', squadVersion: 'legacy-squad', coreVersion: 'legacy-core', officeVersion: 'legacy-office' }
+    await seed(settings, migratedChecks)
+    await assertPolicy(tag, locale)
+    const expectedState = { schema: 1, checked: migratedChecks, settings: { ...settings, mode: 'autopilot' } }
+    for (const [page, selector, prompt] of requestCases(content[locale])) {
+      await go(page)
+      await assertCopy(tag + ' ' + page + '/' + (prompt.lifecycle ?? 'request'), `${visibleLesson}.querySelector(${JSON.stringify(selector)})`, prompt, settings)
+    }
+    // Reading imports is non-destructive; the next explicit setting action persists normalized state.
+    await click(`document.getElementById('experience-${experience}')`)
+    assert.deepEqual(await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)}))`), expectedState, tag + ' all fields retained')
+    results.push(tag + ' schema, checkpoints, locale, client, install and versions retained; mode normalized')
+    await call('Page.reload')
+    await waitFor(() => evaluate(`!!document.querySelector('[data-testid="language"]')`), tag + ' canonical reload')
+    assert.deepEqual(await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)}))`), expectedState, tag + ' reload is idempotent')
+    results.push(tag + ' canonical autopilot and every other field persist on reload')
+  }
   // Invalid supplied settings must survive language changes and checkpoint actions unchanged.
   for (const [key, value] of [['locale', 'invalid'], ['mode', 'interactive-invalid']]) {
     const raw = JSON.stringify({ schema: 1, checked: ['start-0'], settings: { ...defaults, [key]: value } })
     await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(raw)})`)
     await call('Page.reload')
     await waitFor(() => evaluate(`!!document.querySelector('[role="alert"]')`), key + ' explicit saved-state error')
-    await check(`${key} error identifies invalid supplied setting`, `document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(key === 'locale' ? 'Unknown saved language' : 'Unknown saved VS Code mode')})`)
+    await check(`${key} error identifies invalid supplied setting`, `document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(key === 'locale' ? 'Unknown saved language' : 'Unknown saved mode')})`)
     await setLanguage('fr')
     await go('start')
     await click(`${visibleLesson}.querySelector('.check-row input')`)
-    await check(`${key} error remains localized and bad data preserved`, `localStorage.getItem(${JSON.stringify(storageKey)})===${JSON.stringify(raw)} && document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(key === 'locale' ? 'Langue enregistrée inconnue' : 'Mode VS Code enregistré inconnu')})`)
+    await check(`${key} error remains localized and bad data preserved`, `localStorage.getItem(${JSON.stringify(storageKey)})===${JSON.stringify(raw)} && document.querySelector('[role="alert"]').textContent.includes(${JSON.stringify(key === 'locale' ? 'Langue enregistrée inconnue' : 'Mode enregistré inconnu')})`)
   }
   await seed({ ...defaults, locale: 'fr' })
   await evaluate(`Storage.prototype.setItem=function(){throw new DOMException('QA quota','QuotaExceededError')}`)
@@ -459,12 +516,12 @@ try {
   await evaluate(`localStorage.setItem(${JSON.stringify(storageKey)},${JSON.stringify(JSON.stringify({ schema: 1, checked: ['start-0', 'prepare-3'], settings: oldSettings }))})`)
   await call('Page.navigate', { url: url + '?lang=bad#prepare' })
   await waitFor(() => evaluate(`!!${visibleLesson}`), 'safe invalid URL language')
-  await check('Invalid URL defaults English without erasing old state', `document.documentElement.lang==='en' && document.querySelector('.notice').textContent.includes('Unknown URL language') && document.getElementById('experience-app').getAttribute('aria-selected')==='true' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.clientVersion==='old-client' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.includes('prepare-3')`)
+  await check('Invalid URL defaults English without erasing old state', `document.documentElement.lang==='en' && [...document.querySelectorAll('.notice')].some(node=>node.textContent.includes('Unknown URL language')) && document.getElementById('experience-app').getAttribute('aria-selected')==='true' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.clientVersion==='old-client' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.includes('prepare-3')`)
   await setLanguage('fr')
   await check('Choosing a valid language clears the stale URL warning immediately', `document.documentElement.lang==='fr' && !location.search.includes('lang=') && ![...document.querySelectorAll('.notice')].some(node=>node.textContent.includes('Langue d’URL inconnue'))`)
   await call('Page.reload')
   await waitFor(() => evaluate(`!!${visibleLesson}`), 'saved locale after URL override removed')
-  await check('Migrated state and French preference persist after reload', `document.documentElement.lang==='fr' && !location.search.includes('lang=') && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.mode==='interactive' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.install==='apm' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.length===2`)
+  await check('Migrated state and French preference persist after reload', `document.documentElement.lang==='fr' && !location.search.includes('lang=') && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.mode==='autopilot' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.install==='apm' && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.length===2`)
   const denyRead = await call('Page.addScriptToEvaluateOnNewDocument', { source: `Storage.prototype.getItem=function(){throw new DOMException('QA blocked','SecurityError')}` })
   await call('Page.navigate', { url: url + '?lang=fr#resources' })
   await waitFor(() => evaluate(`!!document.querySelector('[role="alert"]')`), 'denied storage read')
@@ -481,11 +538,24 @@ try {
     await call('Page.navigate', { url: pathToFileURL(resolve(root, 'onepoint-workshop-portable.html')).href + `?lang=${locale}&scoutTheme=light#overview` })
     await waitFor(() => evaluate(`!!document.querySelector('.hero')`), locale + ' standalone opened')
     await check(`${locale} standalone document and embedded logo`, `document.documentElement.lang===${JSON.stringify(locale)} && document.querySelector('.hero h1').textContent===${JSON.stringify(translator(locale)('title'))} && document.querySelector('.brand img').src.startsWith('data:image/svg+xml;base64,') && document.querySelectorAll('script[src],link[rel="stylesheet"]').length===0`)
-    await click(`document.getElementById('experience-vscode')`)
-    await setMode('autonomous')
-    await go('product')
-    assert.equal(await evaluate(`${visibleLesson}.querySelector('.phase-launch pre').textContent`), renderPrompt(content[locale].lessons.find(l => l.id === 'product').launch, { ...defaults, locale, experience: 'vscode', mode: 'autonomous' }))
-    results.push(locale + ' standalone VS Code autonomous prompt exact')
+    for (const experience of clients) {
+      const settings = { ...defaults, locale, experience, mode: 'autonomous' }
+      await seed(settings, migratedChecks)
+      await assertPolicy(`${locale}/${experience} standalone legacy autonomous`, locale)
+      await click(`document.getElementById('experience-${experience}')`)
+      await check(`${locale}/${experience} standalone normalizes saved mode`, `JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.mode==='autopilot'`)
+      for (const [page, selector, prompt] of requestCases(content[locale])) {
+        await go(page)
+        await assertCopy(`${locale}/${experience} standalone ${page}/${prompt.lifecycle ?? 'request'}`, `${visibleLesson}.querySelector(${JSON.stringify(selector)})`, prompt, settings)
+      }
+      for (const theme of ['light', 'dark']) {
+        if (await evaluate('document.documentElement.dataset.theme') !== theme) await click(`document.querySelector('.header-actions button[aria-label]')`)
+        await call('Emulation.setEmulatedMedia', { media: 'print' })
+        await assertPrintPolicy(`${locale}/${experience} standalone/${theme}`, locale, experience)
+        await check(`${locale}/${experience} standalone/${theme} print localized with logo and print palette`, `document.querySelector('.print-sources h2').textContent===${JSON.stringify(translator(locale)('sourcesMaterials'))} && document.querySelector('.print-heading img').naturalWidth===64 && getComputedStyle(document.body).backgroundColor==='rgb(255, 255, 255)' && getComputedStyle(document.documentElement).getPropertyValue('--cp-accent').trim()==='#08764f'`)
+        await call('Emulation.setEmulatedMedia', { media: '' })
+      }
+    }
     await go('lab')
     await changeSelect('article:not(.print-only) .fixture-select select', 'valeur-nulle')
     await check(`${locale} standalone localized fixture error`, `${visibleArticle}.querySelector('.report-preview').textContent.includes(${JSON.stringify(locale === 'fr' ? 'Donnée indisponible: Délai moyen' : 'Data unavailable: Average turnaround')})`)
@@ -502,7 +572,7 @@ try {
     await screenshot(`onepoint-${locale}-portable`)
   }
   assert.ok(requests.slice(standaloneStart).filter(request => /^(file|https?):/.test(request)).every(request => request.includes('onepoint-workshop-portable.html')))
-  results.push('Both standalone languages, modes and eight downloads use no external app requests')
+  results.push('Both standalone languages, all clients, mandatory autopilot and eight downloads use no external app requests')
   assert.deepEqual(exceptions, [])
   assert.ok(requests.filter(request => /^https?:/.test(request)).every(request => request.startsWith(origin + '/')))
   results.push('No JavaScript exceptions or external application requests')

@@ -5,7 +5,8 @@ Conservez la fiche complétée dans le projet participant ; ne la publiez pas av
 Date / auteur :
 Dépôt participant :
 Conversation ou contexte à reprendre :
-Client / langue / mode choisi :
+Client / langue :
+Mode obligatoire de l’atelier à consigner — mode="autopilot" (App/CLI/VS Code ; sauf init/promote) :
 Équipe de planification réellement créée / chemin :
 Confirmation d’initialisation :
 Promotion confirmée / chemins et livrables préservés :

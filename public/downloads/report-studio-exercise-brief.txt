@@ -31,16 +31,26 @@ Do not consume the final thirty-minute discussion.
 
 CLIENT CHOICE
 App/CLI: choose Squad Coordinator through the App agent list or CLI /agent;
-use plain requests. For VS Code, prepare this repository and knowledge-docs,
+prepend mode="autopilot" and a blank line to every plain request except
+init/promote, which remain unchanged. For VS Code, prepare this repository and knowledge-docs,
 then install APM, authenticate and run at the participant repository root:
   apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
 Confirm /squad and /squad-federation prompt entries in GitHub Copilot Chat.
 Do not overlay duplicate plug-in/APM resources. A terminal or MCP-only
 installation does not prove prompt availability. The guide's VS Code tab
-renders complete commands. Single-squad init is in request, not an init flag.
+renders complete commands. Single-squad initialization uses the setup text
+in request, without a leading init line or an init flag.
 Federation promote and init are standalone flags, not mode values.
-Interactive omits mode. Optional autonomous/autopilot applies only to
-product and implementation; required approvals and final validation remain.
+All clients require exact mode="autopilot" for every non-lifecycle request,
+including readiness, product, implementation and read-only resumption.
+VS Code: /squad mode="autopilot" request="..." for readiness/product;
+/squad-federation mode="autopilot" request="..." for implementation/resumption.
+Exceptions: /squad request="..." for planning init;
+/squad-federation promote request="..." and
+/squad-federation init request="..." for federation lifecycle only.
+Ellipses describe syntax; copy full guide blocks. Installation shell commands
+are unchanged. No optional mode: keep request scope, read-only boundaries,
+requested stops, plan/impactful-action approvals and final validation.
 Untargeted federation autopilot can span routed sub-squads. Never invent
 a registered squad name. Setup confirmations remain separate self-reports.
 Sources:
