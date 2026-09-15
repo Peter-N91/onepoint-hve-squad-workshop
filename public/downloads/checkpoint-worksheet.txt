@@ -8,6 +8,7 @@ Test date:
 Participant repository:
 Copilot client / version:
 Actual HVE Squad / HVE Core versions or APM revisions:
+APM CLI version, if used (required: v0.29.0, not latest; confirm with apm --version):
 Request language:
 Mandatory workshop mode record — mode="autopilot" (App/CLI/VS Code; except init/promote):
 OS / Office host / version / requirement sets:

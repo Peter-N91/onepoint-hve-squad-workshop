@@ -50,7 +50,7 @@ export const architecture = [
 ] satisfies typeof en.architecture
 export const installation = {
   plugin: { ...en.installation.plugin, title: 'Installer les deux entrées du plug-in dans Copilot CLI' },
-  apm: { ...en.installation.apm, title: 'Installer dans le dépôt avec APM, référence épinglée' },
+  apm: { ...en.installation.apm, title: 'Installer HVE Squad avec APM v0.29.0' },
 } satisfies typeof en.installation
 export const repositorySetup: Prompt = {
   title: 'Créer un nouveau dépôt participant — PowerShell', shell: true,
@@ -111,12 +111,12 @@ const lessonCopies = {
       { title: '2. Placer le cadrage dans knowledge-docs', body: 'Avant toute installation, enregistrez le cadrage TXT synthétique des Ressources dans knowledge-docs à la racine. Un document de travail autorisé peut rester local ; ne le copiez jamais dans ce site. Le .gitignore exclut les entrées privées mais n’est pas un contrôle d’accès : vérifiez les fichiers suivis avant tout partage.' },
     ],
     steps: [
-      { title: 'Vérifier les versions et le client', body: 'Pour le plug-in, confirmez les deux entrées actives dans le client réel. Pour APM, authentifiez-vous sur GitHub, puis installez depuis le dépôt participant. v0.16.2 est la référence de répétition Qubix, pas une garantie des versions installées ni une validation du poste Onepoint.' },
+      { title: 'Vérifier les versions et le client', body: 'Pour le plug-in, confirmez les deux entrées actives dans le client réel. Pour APM, utilisez exactement v0.29.0, pas la dernière version. Exécutez apm --version et confirmez 0.29.0 avant de vous authentifier sur GitHub et d’installer depuis le dépôt participant. Si une autre version est affichée, installez d’abord la version requise. HVE Squad v0.16.2 est une version de package distincte, pas celle du CLI APM ni une preuve que le poste est prêt.' },
       { title: 'Vérifier l’environnement Office', body: 'Consignez le système, les applications, les versions, le type de manifeste, les ensembles de spécifications, le serveur HTTPS local et l’autorisation de chargement indépendant. Ne demandez pas de consentement administrateur pendant la session. Aucun connecteur de production n’est nécessaire pour les données synthétiques.' },
       { title: 'Faire lire le contexte au client', body: 'Après installation, choisissez Squad Coordinator dans la liste des agents de l’App ou via /agent dans le CLI ; dans VS Code, vérifiez l’entrée /squad dans GitHub Copilot Chat. Comparez la réponse ci-dessous au document. Si le client ne trouve pas knowledge-docs, indiquez explicitement le chemin local autorisé.', prompt: { title: 'Vérifier la compréhension sans commencer le travail', entry: 'squad', text: prompts.readiness } },
     ],
     evidence: ['Dépôt local et cadrage lisible dans knowledge-docs', 'Versions réellement installées et client utilisé', 'Préparation Office ou blocage explicitement consigné'],
-    checks: ['knowledge-docs est à la racine de mon dépôt participant.', 'Mes deux entrées associées ou mon installation APM sont vérifiées.', 'J’ai consigné l’application et les limites de mon environnement Office.', pdfReadiness.checkpoint],
+    checks: ['knowledge-docs est à la racine de mon dépôt participant.', 'Mes deux entrées associées sont vérifiées, ou apm --version affiche la version requise APM v0.29.0.', 'J’ai consigné l’application et les limites de mon environnement Office.', pdfReadiness.checkpoint],
     recovery: 'Résolvez si possible les blocages de préparation avant jeudi. Si vous êtes encore bloqué à 09:00, travaillez en binôme dans un environnement approuvé et rejoignez la partie 03 ; n’ajoutez pas de session d’installation en direct. Après cinq minutes de blocage, formez un binôme plutôt que retarder le groupe. Le poste individuel reste non prêt ; ne contournez ni proxy, ni protection, ni politique de sources approuvées.',
   },
   product: {
@@ -248,5 +248,6 @@ const sourceNames: SourceLabels<typeof en.sources> = [
   'Compléments Office — présentation', 'Support des ensembles de spécifications', 'API Word', 'API PowerPoint', 'Power BI Execute Queries',
   'Installation officielle de Copilot CLI', 'Démarrage rapide APM', 'HVE Core — conception d’une expérimentation minimale viable',
   'Commande VS Code /squad — paramètres v0.16.2', 'Commande VS Code /squad-federation — paramètres v0.16.2', 'Manifeste APM — distribution des commandes v0.16.2',
+  'APM v0.29.0 — version du CLI obligatoire, pas la dernière version',
 ]
 export const sources = en.sources.map((source, index) => ({ ...source, name: sourceNames[index] }))

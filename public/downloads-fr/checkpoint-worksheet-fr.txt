@@ -8,6 +8,7 @@ Date du test :
 Dépôt participant :
 Client Copilot / version :
 Versions réelles HVE Squad / HVE Core ou révisions APM :
+Version du CLI APM, si utilisé (obligatoire : v0.29.0, pas la dernière version ; vérifier avec apm --version) :
 Langue des demandes :
 Mode obligatoire de l’atelier à consigner — mode="autopilot" (App/CLI/VS Code ; sauf init/promote) :
 Système / application Office / version / ensembles de spécifications :

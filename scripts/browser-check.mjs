@@ -369,6 +369,7 @@ try {
         await click(`document.getElementById('experience-${experience}')`)
         await check(`${tag} APM choice survives VS Code roundtrip`, `JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings.install==='apm'`)
       }
+      await check(`${tag} APM CLI is v0.29.0, not latest, with a fixed release and version check`, `(()=>{const panel=${visibleLesson}.querySelector('[data-testid="apm-version-policy"]');return !!panel && panel.textContent.includes('APM v0.29.0') && panel.textContent.includes('apm --version') && panel.querySelector('a').href==='https://github.com/microsoft/apm/releases/tag/v0.29.0' && panel.textContent.includes(${JSON.stringify(locale === 'fr' ? 'pas la dernière version' : 'not latest')});})()`)
       await go('product')
       const product = c.lessons.find(l => l.id === 'product')
       await check(`${tag} readiness check stays inside product hour`, `${visibleLesson}.textContent.includes('09:00–09:10') && ${visibleLesson}.querySelector('.eyebrow').textContent.includes('09:00–10:00')`)

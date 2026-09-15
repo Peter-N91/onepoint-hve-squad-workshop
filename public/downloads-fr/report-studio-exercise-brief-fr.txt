@@ -35,8 +35,11 @@ CHOIX DU CLIENT
 App/CLI : choisissez Squad Coordinator via la liste des agents de l’App ou
 /agent dans le CLI ; ajoutez mode="autopilot" et une ligne vide avant toute
 demande simple sauf init/promote, qui restent inchangés. Pour VS Code, préparez
-ce dépôt et knowledge-docs, puis installez APM, authentifiez-vous et exécutez
-à la racine du dépôt participant :
+ce dépôt et knowledge-docs, puis installez exactement APM v0.29.0, pas la dernière version :
+  https://github.com/microsoft/apm/releases/tag/v0.29.0
+Exécutez apm --version : il doit afficher 0.29.0. Sinon, installez v0.29.0
+avant de continuer. C’est la version du CLI APM ; l’épinglage #v0.16.2
+ci-dessous désigne séparément HVE Squad. Authentifiez-vous et exécutez à la racine :
   apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
 Confirmez /squad et /squad-federation dans GitHub Copilot Chat.
 Ne superposez pas des ressources plug-in/APM en double. Une installation

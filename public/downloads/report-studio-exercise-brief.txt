@@ -33,7 +33,11 @@ CLIENT CHOICE
 App/CLI: choose Squad Coordinator through the App agent list or CLI /agent;
 prepend mode="autopilot" and a blank line to every plain request except
 init/promote, which remain unchanged. For VS Code, prepare this repository and knowledge-docs,
-then install APM, authenticate and run at the participant repository root:
+then install exactly APM v0.29.0, not latest:
+  https://github.com/microsoft/apm/releases/tag/v0.29.0
+Run apm --version; it must report 0.29.0. If it reports another version,
+install v0.29.0 before continuing. This is the APM CLI version; the separate
+#v0.16.2 pin below selects HVE Squad. Authenticate and run at the repository root:
   apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
 Confirm /squad and /squad-federation prompt entries in GitHub Copilot Chat.
 Do not overlay duplicate plug-in/APM resources. A terminal or MCP-only

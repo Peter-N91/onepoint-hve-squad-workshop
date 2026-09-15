@@ -157,9 +157,17 @@ Fixture indicator keys and negative-case IDs are stable machine identifiers;
 their labels, metadata and expected messages follow the chosen language.
 Legal notices are preserved verbatim in English, labelled as original text.
 
+APM CLI — REQUIRED v0.29.0, NOT LATEST
+Use exactly APM v0.29.0 for every APM installation path, including VS Code.
+Download the fixed release: https://github.com/microsoft/apm/releases/tag/v0.29.0
+Run apm --version and confirm 0.29.0. If a different version is reported,
+install v0.29.0 before proceeding; do not use a latest-release installer or
+an unpinned upgrade. APM CLI v0.29.0 and the HVE Squad v0.16.2 package pin
+are separate requirements. These instructions do not change the local APM installation.
+
 VS CODE — VERIFIED v0.16.2 PROMPT-FILE ROUTE
 Prepare the participant repository and knowledge-docs first. Install APM
-and authenticate to GitHub, then at that root:
+v0.29.0 as above and authenticate to GitHub, then at that root:
   apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
 This supplies .github\prompts\squad\squad.prompt.md and
 .github\prompts\squad\squad-federation.prompt.md. Confirm the slash entries
@@ -263,8 +271,16 @@ Parties 01/02 : avant jeudi, à votre rythme, 0 minute en direct.
 Si la préparation bloque, formez un binôme dans un environnement approuvé ;
 n’ajoutez pas d’installation complète en direct.
 
+APM CLI — v0.29.0 OBLIGATOIRE, PAS LA DERNIÈRE VERSION
+Utilisez exactement APM v0.29.0 pour tous les parcours APM, dont VS Code.
+Version fixe : https://github.com/microsoft/apm/releases/tag/v0.29.0
+Exécutez apm --version et confirmez 0.29.0. Si une autre version est affichée,
+installez v0.29.0 avant de continuer ; n’utilisez pas une installation de la
+dernière version ni une mise à jour non épinglée. Le CLI APM v0.29.0 est
+distinct du package HVE Squad épinglé en v0.16.2.
+
 VS CODE — COMMANDES GITHUB COPILOT CHAT
-Préparez d’abord le dépôt participant et knowledge-docs. Installez APM et
+Préparez d’abord le dépôt participant et knowledge-docs. Installez APM v0.29.0 et
 authentifiez-vous sur GitHub, puis exécutez à la racine de ce dépôt :
   apm install "Peter-N91/hve-squad#v0.16.2" --target copilot
 Vérifiez les fichiers .github\prompts\squad\ et les entrées /squad et

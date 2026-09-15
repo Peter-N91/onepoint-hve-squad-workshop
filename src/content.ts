@@ -26,6 +26,8 @@ export type Lesson = {
 }
 
 export const baseline = '0.16.2'
+export const apmVersion = '0.29.0'
+export const apmReleaseUrl = 'https://github.com/microsoft/apm/releases/tag/v0.29.0'
 export const observationNote: string = 'Expected behaviors to observe, not instructions to paste. Record what actually happens. If a check or proposal is missing, record that gap before intervening; do not quietly prescribe it and then present it as automatic. Consent is still required.'
 export const prompts = {
   readiness: "Read the scoping document in knowledge-docs at the root of this repository. Summarize the business objective and three requirements, with their section references. Distinguish requirements from proposed workshop choices. For now, only answer: do not start planning or development.",
@@ -80,7 +82,7 @@ export const installation: Record<'plugin' | 'apm', Prompt> = {
     text: 'copilot plugin marketplace add Peter-N91/hve-squad-plugin\ncopilot plugin install hve-squad@hve-squad-plugin\ncopilot plugin install hve-squad-hve-core@hve-squad-plugin\ncopilot plugin list',
   },
   apm: {
-    title: 'Install in the repository with APM, pinned reference', shell: true,
+    title: 'Install HVE Squad with APM v0.29.0', shell: true,
     text: 'apm install "Peter-N91/hve-squad#v0.16.2" --target copilot',
   },
 }
@@ -142,12 +144,12 @@ export const lessons: Lesson[] = [
       { title: '2. Place the scoping document in knowledge-docs', body: 'Before any installation, save the synthetic TXT brief from Resources in knowledge-docs at the root. An authorized working document can stay local; never copy it into this site. The .gitignore excludes private inputs but is not an access control: check tracked files before sharing.' },
     ],
     steps: [
-      { title: 'Check versions and client', body: 'For the plug-in, confirm both active entries in the actual client. For APM, authenticate to GitHub, then install from the participant repository. v0.16.2 is the Qubix rehearsal baseline, not a guarantee of installed versions or validation of the Onepoint workstation.' },
+      { title: 'Check versions and client', body: 'For the plug-in, confirm both active entries in the actual client. For APM, use exactly v0.29.0, not latest. Run apm --version and confirm 0.29.0 before authenticating to GitHub and installing from the participant repository. If another version is reported, install the required release first. HVE Squad v0.16.2 is a separate package version, not the APM CLI version or proof of workstation readiness.' },
       { title: 'Check the Office environment', body: 'Record OS, hosts, versions, manifest type, requirement sets, local HTTPS server and sideloading authorization. Do not request administrator consent during the session. No production connector is needed for synthetic data.' },
       { title: 'Have the client read the context', body: 'After installation, choose Squad Coordinator in the App agent list or via /agent in the CLI; in VS Code confirm the /squad prompt entry in GitHub Copilot Chat. Compare the response below with the document. If the client misses knowledge-docs, explicitly provide the authorized local path.', prompt: { title: 'Check understanding without starting work', entry: 'squad', text: prompts.readiness } },
     ],
     evidence: ['Local repository and readable scoping document in knowledge-docs', 'Actual installed versions and client used', 'Office readiness or an explicitly recorded blocker'],
-    checks: ['knowledge-docs is at the root of my participant repository.', 'My two paired entries or APM installation are checked.', 'I recorded the host and limitations of my Office environment.', pdfReadiness.checkpoint],
+    checks: ['knowledge-docs is at the root of my participant repository.', 'My two paired entries are checked, or apm --version reports the required APM v0.29.0.', 'I recorded the host and limitations of my Office environment.', pdfReadiness.checkpoint],
     recovery: 'Resolve preparation blockers before Thursday where possible. If still blocked at 09:00, pair up in an approved environment and join Part 03; do not add a live installation block. After five minutes blocked, pair up rather than delaying the group. The individual workstation is still not ready; do not bypass a proxy, protection or approved-source policy.',
   },
   {
@@ -284,4 +286,5 @@ export const sources = [
   { name: 'VS Code /squad prompt — v0.16.2 inputs', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad.prompt.md' },
   { name: 'VS Code /squad-federation prompt — v0.16.2 inputs', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/squad-src/.github/prompts/squad/squad-federation.prompt.md' },
   { name: 'APM manifest — v0.16.2 prompt-file distribution', url: 'https://github.com/Peter-N91/hve-squad/blob/v0.16.2/apm.yml' },
+  { name: 'APM v0.29.0 — required CLI release, not latest', url: apmReleaseUrl },
 ] as const

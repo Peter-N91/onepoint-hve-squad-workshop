@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { content } from '../src/locales.ts'
+import { apmReleaseUrl, apmVersion } from '../src/content.ts'
 import { agentSelection, clients, decodeState, defaults, missingSetup, modes, nextClient, renderPrompt, toggleCheckpoint } from '../src/state.ts'
 import { StateError, stateErrorText } from '../src/language.ts'
 import { translator } from '../src/ui.ts'
@@ -218,4 +219,38 @@ test('both languages document mandatory autopilot for every client with lifecycl
     }
   }
   assert.doesNotMatch(running, /Default interactive|mode interactif par défaut|mode interactif omet|ONLY to product|seulement au produit/)
+})
+test('all APM paths require CLI v0.29.0 separately from the HVE Squad package pin', async () => {
+  assert.equal(apmVersion, '0.29.0')
+  assert.equal(apmReleaseUrl, 'https://github.com/microsoft/apm/releases/tag/v0.29.0')
+  for (const locale of ['en', 'fr']) {
+    const c = content[locale]
+    const t = translator(locale)
+    assert.match(c.installation.apm.title, /APM v0\.29\.0/)
+    assert.equal(c.installation.apm.text, 'apm install "Peter-N91/hve-squad#v0.16.2" --target copilot')
+    assert.ok(c.sources.some(source => source.url === apmReleaseUrl))
+    for (const key of ['apmNote', 'vscodeInstallNote', 'apmVersionNote', 'apmVersionExpected']) {
+      assert.match(t(key), /v0\.29\.0/)
+    }
+    assert.match(t('apmVersionRequired'), locale === 'fr' ? /pas la dernière version/ : /not latest/)
+    assert.match(t('apmVersionExpected'), locale === 'fr' ? /arrêtez-vous/ : /stop/)
+    const preparation = c.lessons.find(lesson => lesson.id === 'prepare')
+    assert.match(preparation.steps[0].body, /apm --version/)
+    assert.match(preparation.checks[1], /APM v0\.29\.0/)
+    const suffix = locale === 'fr' ? '-fr' : ''
+    const brief = await load(`../public/downloads${suffix}/report-studio-exercise-brief${suffix}.txt`)
+    const worksheet = await load(`../public/downloads${suffix}/checkpoint-worksheet${suffix}.txt`)
+    for (const text of [brief, worksheet]) {
+      assert.match(text, /APM v0\.29\.0|v0\.29\.0/)
+      assert.match(text, /apm --version/)
+    }
+    assert.ok(brief.includes(apmReleaseUrl))
+  }
+  const app = await load('../src/App.tsx')
+  assert.match(app, /data-testid="apm-version-policy"/)
+  assert.match(app, /saved\.settings\.install === 'apm' && renderApmVersion\(\)/)
+  assert.match(app, /vscodeInstallNote'\)\}<\/p>\{renderApmVersion\(\)\}/)
+  const running = await load('../RUNNING.txt')
+  assert.match(running, /REQUIRED v0\.29\.0, NOT LATEST/)
+  assert.match(running, /v0\.29\.0 OBLIGATOIRE/)
 })

@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react'
-import { lessons as canonicalLessons, lifecycleSteps as canonicalSteps } from './content'
+import { apmReleaseUrl, apmVersion, lessons as canonicalLessons, lifecycleSteps as canonicalSteps } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
 import { agentSelection, autopilotDirective, clients, decodeState, defaults, missingSetup, nextClient, renderPrompt, setupCheckId, storageKey, toggleCheckpoint } from './state'
 import type { SavedState, Settings } from './state'
@@ -183,7 +183,15 @@ function App() {
     return <details className="vscode-reference"><summary>{t('parameters')}</summary><p>{t('parametersNote')}</p><ul>{(['paramRequest', 'paramSquad', 'paramProfile', 'paramPack', 'paramDiscovery', 'paramTier', 'paramOwner'] as const).map(key => <li key={key}>{t(key)}</li>)}</ul><ul>{sources.slice(11).map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.name}</a></li>)}</ul></details>
   }
   function renderVscodeInstall() {
-    return <div className="vscode-install"><h3>{t('vscodeInstall')}</h3><p>{t('vscodeInstallNote')}</p><p className="notice warning">{t('duplicateWarning')}</p>{renderPromptBlock(installation.apm)}</div>
+    return <div className="vscode-install"><h3>{t('vscodeInstall')}</h3><p>{t('vscodeInstallNote')}</p>{renderApmVersion()}<p className="notice warning">{t('duplicateWarning')}</p>{renderPromptBlock(installation.apm)}</div>
+  }
+  function renderApmVersion() {
+    return <div className="notice warning" data-testid="apm-version-policy">
+      <strong>APM v{apmVersion} · {t('apmVersionRequired')}</strong>
+      <p>{t('apmVersionNote')}</p>
+      <p><code>apm --version</code> · {t('apmVersionExpected')}</p>
+      <a href={apmReleaseUrl} target="_blank" rel="noreferrer">{t('apmVersionDownload')}</a>
+    </div>
   }
   function renderLesson(lesson: Lesson, printOnly = false) {
     return <article key={lesson.id} className={printOnly ? 'lesson print-only' : 'lesson'} aria-label={lesson.title}>
@@ -215,6 +223,7 @@ function App() {
           {saved.settings.experience === 'vscode' ? renderVscodeInstall() : <>
             <div className="segmented" aria-label={t('installMethod')}>{(['plugin', 'apm'] as const).map(value => <button type="button" key={value} aria-pressed={saved.settings.install === value} onClick={() => updateSetting('install', value)}>{t(value)}</button>)}</div>
             <p>{t(saved.settings.install === 'plugin' ? 'pluginNote' : 'apmNote')}</p>
+            {saved.settings.install === 'apm' && renderApmVersion()}
             {saved.settings.install === 'plugin' && saved.settings.experience === 'app' ?
               <div className="app-install"><h3>{t('appInstall')}</h3><ol><li>{t('appFind')}</li><li>{t('appPair')}</li><li>{t('appCheck')}</li></ol><p>{t('appLabels')} <a href={sources[2].url} target="_blank" rel="noreferrer">{t('appGuide')}</a></p></div> : renderPromptBlock(installation[saved.settings.install])}
           </>}
