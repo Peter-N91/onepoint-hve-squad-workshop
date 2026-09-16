@@ -8,14 +8,10 @@ import { previewReport } from '../src/report.ts'
 
 const read = path => readFile(new URL(path, import.meta.url), 'utf8')
 const fixture = JSON.parse(await read('../public/downloads/report-studio-fixture.json'))
+const scopeContract = JSON.parse(await read('./full-scope.fixture.json'))
 test('the seven prompts exactly match the English workshop contract', () => {
-  assert.deepEqual(prompts, {
-    readiness: 'Read the scoping document in knowledge-docs at the root of this repository. Summarize the business objective and three requirements, with their section references. Distinguish requirements from proposed workshop choices. For now, only answer: do not start planning or development.',
-    planningInit: 'init\n\nUse the scoping document in knowledge-docs at the root of this repository. We need to understand the need, define business and product requirements, test uncertainties and prioritize the work before development. Set up a team for this planning work. Stop once the team is ready; I will send the work request next.',
-    product: 'Using the scoping document in knowledge-docs, prepare business requirements, product requirements and a prioritized backlog with acceptance criteria and a proposed first release. Include a small experiment to test the most important uncertainty. Users must be able to enrich the reports in Word and PowerPoint. Separate facts, assumptions and pending decisions. Present the plan for review before any implementation.',
+  assert.deepEqual(prompts, { ...scopeContract.prompts,
     promote: 'promote\n\nEvolve the existing team so that it can coordinate planning and a separate delivery team. Preserve the documents, decisions and work items already produced. Stop after this change; do not initialize the delivery team yet or start development.',
-    deliveryInit: 'init\n\nWithin this existing organization, set up a delivery team for the first release agreed in the backlog. The context is an Office add-in for Word and PowerPoint, with Fabric and Power BI data as the eventual target, and synthetic data for the local exercise. Use the reviewed plan and existing decisions to propose suitable expertise. Stop when the team is ready, without starting implementation.',
-    implementation: 'Implement the first release we agreed in the backlog, using the reviewed requirements and decisions. First propose an implementation plan for approval. For this workshop, use only local synthetic data; do not connect to the customer tenant or deploy anything. The result must produce editable content in the selected Office host and preserve manual additions according to the agreed rule. Surface errors without inventing or substituting missing data. Provide the available evidence and clearly distinguish what was executed, simulated or remains to be done.',
     resume: 'Resume the existing work without reinitializing teams or overwriting decisions. Summarize the agreed scope, completed items with their evidence, unexecuted tests and blockers. Propose the next useful backlog action and wait for my approval before continuing.',
   })
 })
@@ -25,14 +21,7 @@ test('English agenda titles and acceptance criteria match the agreed contract', 
     'Federation and technical decisions', 'Break', 'First slice and evidence',
     'Review and independent resumption', 'Discussion and next steps',
   ])
-  assert.deepEqual(lab.acceptance, [
-    'Period and scope are visible; all three values exactly match the selected synthetic dataset',
-    'An editable native Word table, not only a screenshot or PDF',
-    'Synthetic source, reference date and template version are displayed',
-    'Reinsertion follows the selected rule; no user comment is lost',
-    'Missing period or null value: an explicit message, never zero or invented data',
-    'Office host, version and observed outcome are recorded; an unrun test is marked not executed',
-  ])
+  assert.deepEqual(lab.acceptance, scopeContract.acceptance)
 })
 test('English correction preserves saved progress identifiers and schema', () => {
   assert.equal(storageKey, 'onepoint-hve-workshop-2026-09-17-v1')
@@ -184,7 +173,7 @@ test('repository and knowledge-docs precede installation, with overwrite protect
   for (const term of ['onepoint-workshop-project', 'Test-Path', 'git init -b main', '.\\knowledge-docs', '.\\.gitignore', 'private/', '.env', '*.docx', '*.pptx']) assert.ok(repositorySetup.text.includes(term), term)
   assert.ok(repositorySetup.text.indexOf('Test-Path') < repositorySetup.text.indexOf('git init'))
   assert.ok(!/apm install|copilot plugin install/.test(repositorySetup.text))
-  assert.match(prepare.beforeInstall[1].body, /Before any installation/)
+  assert.match(prepare.beforeInstall[1].body, /business-brief\.txt, solution-scope\.txt and architecture\.png/)
 })
 test('both plug-in entries are installed and checked, APM pins the baseline', () => {
   assert.match(installation.plugin.text, /copilot plugin install hve-squad@hve-squad-plugin/)
@@ -199,7 +188,7 @@ test('outcome-oriented requests do not prescribe internal mechanisms', () => {
   assert.match(observationNote, /record that gap/)
 })
 test('context reading is actually compared, Python and PDF remain optional', () => {
-  assert.match(prompts.readiness, /three requirements/)
+  assert.match(prompts.readiness, /all required delivery components/)
   assert.match(prompts.readiness, /section references/)
   assert.match(prompts.readiness, /do not start planning or development/)
   assert.match(pdfReadiness.requirement, /Compare/)
@@ -208,13 +197,13 @@ test('context reading is actually compared, Python and PDF remain optional', () 
   assert.match(pdfReadiness.fallback, /does not perform OCR/)
   assert.match(pdfReadiness.setup.text, /python -m pip install pypdf/)
 })
-test('Office, synthetic data and thresholds remain proposals, not attested outcomes', () => {
-  assert.match(lab.status, /Teaching proposal to confirm/)
-  assert.match(lab.firstSlice, /In Word/)
-  assert.match(lab.extension, /In PowerPoint/)
-  assert.match(lab.mve, /Proposed threshold to approve; the experiment has not been executed/)
+test('complete architecture is required while unexecuted results and detailed choices remain explicit', () => {
+  assert.match(lab.status, /Required workshop delivery baseline/)
+  for (const term of ['Word', 'PowerPoint', '.NET 10', 'Aspose.Words', 'Aspose.Slides', 'Azure App Service', 'IaC', 'CI/CD']) assert.ok(lab.firstSlice.includes(term), term)
+  assert.match(lab.extension, /Word-first is sequencing/)
+  assert.match(lab.mve, /not pre-executed/)
   assert.match(prompts.implementation, /local synthetic data/)
-  assert.match(prompts.implementation, /do not connect to the customer tenant or deploy anything/)
+  assert.match(prompts.implementation, /without creating resources, deploying or changing a tenant/)
   assert.match(lessons.find(item => item.id === 'implementation').recovery, /11:45/)
 })
 test('technical decisions distinguish Office, exports, access and Execute Queries limits', () => {
@@ -269,7 +258,7 @@ test('valid zero is preserved; non-finite numbers are rejected', () => {
 test('four useful downloads are consistent and contain no team state', async () => {
   assert.deepEqual((await readdir(new URL('../public/downloads/', import.meta.url))).sort(), ['checkpoint-worksheet.txt', 'federation-handoff.txt', 'report-studio-exercise-brief.txt', 'report-studio-fixture.json'])
   const exercise = await read('../public/downloads/report-studio-exercise-brief.txt')
-  for (const term of ['SYNTHETIC BRIEF WRITTEN FOR THE EXERCISE', '1280', '1345', '4.2', '3.8', '96.5', '97.2', 'knowledge-docs', 'TEACHING PROPOSAL TO APPROVE']) assert.ok(exercise.includes(term), term)
+  for (const term of ['SYNTHETIC BRIEF WRITTEN FOR THE EXERCISE', 'knowledge-docs', '.NET 10', 'Aspose.Words', 'Aspose.Slides', 'IaC', 'CI/CD']) assert.ok(exercise.includes(term), term)
   const worksheet = await read('../public/downloads/checkpoint-worksheet.txt')
   assert.match(worksheet, /BLANK ACCEPTANCE AND DECISION WORKSHEET/)
   assert.ok(!worksheet.includes('[x]'))

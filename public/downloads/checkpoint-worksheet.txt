@@ -1,67 +1,21 @@
 REPORT STUDIO — BLANK ACCEPTANCE AND DECISION WORKSHEET
-Onepoint workshop — 17 September 2026, 09:00–12:30 CEST
-Complete in the participant repository. No prefilled results.
-Do not enter private data in the guide or publish it alongside the guide.
+Date / participant:
+Repository:
+Client / language:
+Registered implementation squad:
+App/CLI/VS Code: mode="autopilot" required except init/promote.
+APM v0.29.0, not latest; verify apm --version.
+All component evidence remains blank until observed. Optional ADO and HLD/LLD completion do not gate delivery.
 
-CONTEXT
-Test date:
-Participant repository:
-Copilot client / version:
-Actual HVE Squad / HVE Core versions or APM revisions:
-APM CLI version, if used (required: v0.29.0, not latest; confirm with apm --version):
-Request language:
-Mandatory workshop mode record — mode="autopilot" (App/CLI/VS Code; except init/promote):
-OS / Office host / version / requirement sets:
-Selected scope and backlog items:
-Local scoping source / version / sections:
 
-DECISION — DUPLICATE FOR EACH CHOICE
-Question:
-Fact and reference:
-Assumption or teaching proposal:
-Possible choices:
-Decision / rationale:
-Confirmed by / date:
-Impact on Word and PowerPoint:
-Next evidence / owner to designate:
+CURRENT REQUIRED CRITERIA
+1. The reviewed plan covers Word and PowerPoint add-ins, the .NET 10/Aspose backend, Azure App Service IaC and CI/CD, with interfaces, dependencies and acceptance criteria for each
+2. Add-in manifests and host adapters are authored for both Word and PowerPoint, using a shared generation API contract; actual host tests are recorded separately
+3. ASP.NET Core .NET 10 generation code uses Aspose.Words and Aspose.Slides; generated DOCX/PPTX editability, compatibility and licensing limitations are evidenced rather than assumed
+4. Synthetic values come from the backend data-provider boundary and match the selected period; source, scope and template version are traceable
+5. Regeneration preserves manual additions according to an agreed rule; missing periods and null values produce explicit errors without invented replacements
+6. IaC describes the required Azure App Service hosting and supporting configuration, with environment parameters and secret references; validation or plan results are recorded without applying changes
+7. CI/CD definitions cover build, test, security checks including SAST/DAST where applicable, packaging and approval-controlled deployment; unexecuted stages and prerequisites are explicit
+8. A component-to-evidence matrix distinguishes authored, locally executed, simulated, blocked and not-executed work; no required component is silently omitted
 
-MINIMUM VIABLE EXPERIMENT (MVE ≠ MVP)
-Uncertainty:
-Hypothesis:
-Protocol:
-Proposed measure and threshold:
-Threshold approval:
-Status (not executed / executed / blocked):
-Observed outcome:
-Decision after observation:
-
-ACCEPTANCE — DUPLICATE FOR EACH CRITERION
-Backlog item / criterion:
-Nominal or negative dataset / period:
-Approved expected outcome:
-Exact action or command:
-Observed:
-Status (executed pass / executed fail / simulated / not executed / blocked):
-Evidence path:
-Gap / next action:
-
-PROPOSED ACCEPTANCE CRITERIA — APPROVE BEFORE IMPLEMENTATION
-[ ] Period and scope are visible; all three values exactly match the selected synthetic dataset
-[ ] An editable native Word table, not only a screenshot or PDF
-[ ] Synthetic source, reference date and template version are displayed
-[ ] Reinsertion follows the selected rule; no user comment is lost
-[ ] Missing period or null value: an explicit message, never zero or invented data
-[ ] Office host, version and observed outcome are recorded; an unrun test is marked not executed
-
-ADDITIONAL COVERAGE TO CHECK (boxes left blank)
-[ ] Both nominal periods tested.
-[ ] Null value: explicit message, no zero or carried-over value.
-[ ] Missing period: explicit message, no implicit substitution.
-[ ] PowerPoint tested or criteria and remaining work retained.
-
-SUMMARY
-Spontaneous behavior observed:
-Human intervention needed:
-Expected but missing behavior:
-Unexecuted items and blockers:
-Approved next action:
+For each component: files / command / result / authored-local-simulated-blocked-not executed / next action.

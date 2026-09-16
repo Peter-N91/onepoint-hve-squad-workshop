@@ -1,4 +1,41 @@
 ONEPOINT — FROM DATA TO REPORTS, WITH HVE SQUAD
+
+COMPLETE DELIVERY SCOPE — 16 SEPTEMBER 2026
+Required throughout readiness, both init requests, planning and implementation:
+Word and PowerPoint add-ins; ASP.NET Core .NET 10 generation with Aspose.Words
+and Aspose.Slides on Azure App Service; IaC; CI/CD with security checks and
+approval-controlled deployment. Word-first is sequencing, not removing layers.
+Synthetic data replaces external responses behind the backend, NOT the backend,
+Aspose generation, Office/API contracts, infrastructure source or pipeline source.
+Do not deploy is an execution boundary: still author and locally validate IaC
+and CI/CD. A license or compatibility blocker is reported, never silently bypassed.
+Use knowledge-docs\business-brief.txt, solution-scope.txt and architecture.png
+from the facilitator's private pack. Data fixture belongs in data. Public
+solution-scope.txt and solution-scope-fr.txt are complete written alternatives;
+request the authorized image or explicitly accept the written-scope route.
+Archive old frontend-only briefs outside the active knowledge-docs folder.
+Existing progress checks are retained, not proof of the broadened scope.
+
+OPTIONAL AZURE DESIGN — #azure-design
+After Part 05, request HLD and LLD using Python diagrams and verified Azure
+icons with system Graphviz dot. Keep editable Python source and both PNG/SVG
+pairs, narrative and code/IaC/pipeline traceability. Label proposed, implemented
+and unverified elements; this is not as-built proof. No real tenant access,
+resource changes or deployment is requested. Missing tools do not block later
+steps. design-0/1/2 are optional and excluded from the 25 core checkpoints,
+just like the ADO branch. No fixed time is added; protect final discussion.
+
+PÉRIMÈTRE COMPLET ET DIAGRAMMES FACULTATIFS
+Les deux init, le cadrage et l’implémentation couvrent compléments Word/PowerPoint,
+.NET 10 avec Aspose.Words/Slides sur App Service, IaC et CI/CD/sécurité.
+Les données synthétiques remplacent l’accès externe derrière le backend,
+pas les composants requis. Sans déployer, écrire/valider les fichiers reste requis.
+Le pack privé fournit business-brief.txt, solution-scope.txt et architecture.png
+dans knowledge-docs ; le JSON reste dans data. Signaler une image indisponible.
+Après la partie 05, #azure-design propose HLD/LLD facultatifs avec Python
+diagrams, icônes Azure, Graphviz, sources Python et paires PNG/SVG. Aucun effet
+sur la progression principale, la reprise ou la discussion. Ne pas prétendre
+à une architecture déployée ni inventer les paramètres encore inconnus.
 Hands-on workshop: scope and start an Office add-in
 Bilingual English/French local companion — 17 September 2026, 09:00–12:30 CEST
 The final thirty minutes are reserved for discussion.

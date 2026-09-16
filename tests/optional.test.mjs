@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { content } from '../src/locales.ts'
 import { optionalCheckIds, optionalText, publicationPrompt } from '../src/optional.ts'
+import { designCheckIds, designPrompt, designText } from '../src/design.ts'
 import { clients, decodeState, defaults, destinationFields, missingPublicationFields, missingSetup, newSettings, promptTargetErrors, renderPrompt, squadNameError, toggleCheckpoint } from '../src/state.ts'
 
 const ready = ['setup:planning-team', 'setup:promote', 'setup:delivery-team']
@@ -14,6 +15,35 @@ test('new optional settings migrate without losing old fields or changing core p
   assert.deepEqual(result, { schema: 1, settings: { ...old, ...newSettings }, checked })
   for (const key of Object.keys(newSettings)) for (const value of [null, 5, [], {}, 'x'.repeat(301)]) {
     assert.throws(() => decodeState(JSON.stringify({ schema: 1, settings: { ...defaults, [key]: value }, checked })), error => error.code === 'targetField')
+  }
+})
+test('both init requests cover all required components without triggering work or autopilot', () => {
+  for (const locale of ['en', 'fr']) for (const experience of clients) {
+    const c = content[locale]
+    for (const step of [c.lifecycleSteps[0], c.lifecycleSteps[2]]) {
+      for (const term of ['Word', 'PowerPoint', '.NET 10', 'Aspose.Words', 'Aspose.Slides', 'Azure App Service', 'CI/CD']) assert.ok(step.request.text.includes(term), term)
+      assert.doesNotMatch(renderPrompt(step.request, { ...defaults, locale, experience }), /mode=/)
+    }
+    assert.match(c.prompts.planningInit, /init\n/)
+    assert.match(c.prompts.deliveryInit, /init\n/)
+    assert.ok(c.prompts.implementation.includes('IaC'))
+    assert.ok(c.prompts.implementation.includes('CI/CD'))
+  }
+})
+test('optional HLD/LLD uses a registered squad, Python/Azure/Graphviz and no main completion dependency', () => {
+  for (const locale of ['en', 'fr']) for (const experience of clients) {
+    const p = designPrompt(locale)
+    assert.deepEqual(p.requiresSetup, ['delivery-team'])
+    assert.deepEqual(missingSetup(p, ready), [])
+    assert.throws(() => renderPrompt(p, { ...defaults, locale, experience }), /registered|squad|Enter/)
+    const rendered = renderPrompt(p, { ...defaults, locale, experience, implementationSquad: 'delivery' })
+    assert.ok(rendered.includes('mode="autopilot" squad="delivery"'))
+    for (const term of ['HLD', 'LLD', 'Python', 'diagrams', 'Azure', 'Graphviz', 'PNG', 'SVG', '.NET 10', 'Aspose.Words', 'IaC', 'CI/CD']) assert.ok(rendered.includes(term), term)
+    const checks = [...ready, ...optionalCheckIds, ...designCheckIds]
+    assert.deepEqual(missingSetup(content[locale].lessons.find(l => l.id === 'implementation').launch, ready), [])
+    assert.equal(checks.filter(id => ready.includes(id)).length, 3)
+    assert.equal(designCheckIds.length, 3)
+    assert.match(designText(locale)('boundary'), locale === 'fr' ? /ne bloque jamais/ : /never blocks/)
   }
 })
 test('optional publication has no dependencies in core steps or progress IDs', () => {

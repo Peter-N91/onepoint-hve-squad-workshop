@@ -1,67 +1,21 @@
 REPORT STUDIO — FICHE VIERGE D’ACCEPTATION ET DE DÉCISION
-Atelier Onepoint — 17 septembre 2026, 09:00–12:30 CEST
-À compléter dans le dépôt participant. Aucun résultat prérempli.
-Ne saisissez pas de données privées dans le guide et ne les publiez pas avec lui.
+Date / participant :
+Dépôt :
+Client / langue :
+Équipe de réalisation enregistrée :
+App/CLI/VS Code : mode="autopilot" obligatoire sauf init/promote.
+APM v0.29.0, pas la dernière version ; vérifier apm --version.
+Les preuves restent vierges avant observation. ADO et HLD/LLD facultatifs ne bloquent pas la suite.
 
-CONTEXTE
-Date du test :
-Dépôt participant :
-Client Copilot / version :
-Versions réelles HVE Squad / HVE Core ou révisions APM :
-Version du CLI APM, si utilisé (obligatoire : v0.29.0, pas la dernière version ; vérifier avec apm --version) :
-Langue des demandes :
-Mode obligatoire de l’atelier à consigner — mode="autopilot" (App/CLI/VS Code ; sauf init/promote) :
-Système / application Office / version / ensembles de spécifications :
-Périmètre et éléments du backlog choisis :
-Source de cadrage locale / version / sections :
 
-DÉCISION — DUPLIQUER POUR CHAQUE CHOIX
-Question :
-Fait et référence :
-Hypothèse ou proposition pédagogique :
-Choix possibles :
-Décision / justification :
-Confirmation par / date :
-Impact sur Word et PowerPoint :
-Prochaine preuve / responsable à désigner :
+CRITÈRES ACTUELS OBLIGATOIRES
+1. Le plan revu couvre les compléments Word et PowerPoint, le backend .NET 10/Aspose, l’IaC Azure App Service et la CI/CD, avec interfaces, dépendances et critères d’acceptation pour chacun
+2. Les manifestes et adaptateurs sont rédigés pour Word et PowerPoint avec un contrat API de génération partagé ; les tests réels dans les applications sont consignés séparément
+3. Le code de génération ASP.NET Core .NET 10 utilise Aspose.Words et Aspose.Slides ; la modification des DOCX/PPTX, leur compatibilité et les limites de licence sont étayées, pas supposées
+4. Les valeurs synthétiques proviennent de l’interface du fournisseur de données du backend et correspondent à la période choisie ; source, périmètre et version du modèle sont traçables
+5. La régénération préserve les ajouts manuels selon une règle convenue ; périodes absentes et valeurs nulles produisent des erreurs explicites sans remplacement inventé
+6. L’IaC décrit l’hébergement Azure App Service requis et sa configuration, avec paramètres d’environnement et références aux secrets ; les résultats de validation ou de plan sont consignés sans appliquer de changements
+7. Les définitions CI/CD couvrent compilation, test, contrôles de sécurité dont SAST/DAST si applicables, packaging et déploiement soumis à approbation ; étapes non exécutées et prérequis sont explicites
+8. Une matrice composants-preuves distingue les travaux rédigés, exécutés localement, simulés, bloqués et non exécutés ; aucun composant requis n’est omis silencieusement
 
-EXPÉRIMENTATION MINIMALE VIABLE (MVE ≠ MVP)
-Incertitude :
-Hypothèse :
-Protocole :
-Mesure et seuil proposés :
-Approbation du seuil :
-État (non exécuté / exécuté / bloqué) :
-Résultat observé :
-Décision après observation :
-
-ACCEPTATION — DUPLIQUER POUR CHAQUE CRITÈRE
-Élément du backlog / critère :
-Jeu nominal ou négatif / période :
-Résultat attendu approuvé :
-Action ou commande exacte :
-Observation :
-État (exécuté réussi / exécuté échoué / simulé / non exécuté / bloqué) :
-Chemin de preuve :
-Écart / prochaine action :
-
-CRITÈRES D’ACCEPTATION PROPOSÉS — À APPROUVER AVANT L’IMPLÉMENTATION
-[ ] La période et le périmètre sont visibles ; les trois valeurs correspondent exactement au jeu synthétique choisi
-[ ] Un tableau Word natif modifiable, pas uniquement une capture d’écran ou un PDF
-[ ] La source synthétique, la date de référence et la version du modèle sont affichées
-[ ] La réinsertion suit la règle choisie ; aucun commentaire utilisateur n’est perdu
-[ ] Période absente ou valeur nulle : un message explicite, jamais zéro ni une donnée inventée
-[ ] L’application Office, sa version et le résultat observé sont consignés ; un test non lancé est marqué non exécuté
-
-COUVERTURE COMPLÉMENTAIRE À VÉRIFIER (cases laissées vierges)
-[ ] Les deux périodes nominales ont été testées.
-[ ] Valeur nulle : message explicite, pas de zéro ni de valeur reprise.
-[ ] Période absente : message explicite, aucune substitution implicite.
-[ ] PowerPoint testé ou critères et travail restant conservés.
-
-BILAN
-Comportement spontané observé :
-Intervention humaine nécessaire :
-Comportement attendu mais absent :
-Éléments non exécutés et blocages :
-Prochaine action approuvée :
+Par composant : fichiers / commande / résultat / écrit-local-simulé-bloqué-non exécuté / prochaine action.

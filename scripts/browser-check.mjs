@@ -9,6 +9,7 @@ import { content } from '../src/locales.ts'
 import { translator } from '../src/ui.ts'
 import { clients, defaults, modes, renderPrompt, storageKey } from '../src/state.ts'
 import { optionalText, publicationPrompt } from '../src/optional.ts'
+import { designPrompt, designText } from '../src/design.ts'
 
 function expectedPrompt(prompt, settings) {
   if (prompt.shell) return prompt.text
@@ -449,7 +450,7 @@ try {
     await go('resources')
     const filenames = ['report-studio-exercise-brief', 'report-studio-fixture', 'checkpoint-worksheet', 'federation-handoff'].map((base, i) => `${base}${locale === 'fr' ? '-fr' : ''}.${i === 1 ? 'json' : 'txt'}`)
     for (const filename of filenames) await click(`${visibleArticle}.querySelector('[data-download="${filename}"]')`)
-    await waitFor(async () => (await readdir(bilingualDownloads)).filter(name => /\.(txt|json)$/.test(name)).length >= (locale === 'fr' ? 8 : 4), locale + ' material downloads')
+    await waitFor(async () => { const present = await readdir(bilingualDownloads); return filenames.every(name => present.includes(name)) }, locale + ' material downloads')
     for (const filename of filenames) assert.equal(await readFile(resolve(bilingualDownloads, filename), 'utf8'), await readFile(resolve('public', locale === 'fr' ? 'downloads-fr' : 'downloads', filename), 'utf8'))
     results.push(locale + ' four localized downloads byte-identical to source')
     await click(findButton(t('export')))
@@ -657,6 +658,28 @@ try {
   await call('Page.navigate', { url: pathToFileURL(resolve(root, 'onepoint-workshop-portable.html')).href + '?lang=fr#ado' })
   await waitFor(() => evaluate(`!!${ado}`), 'portable optional page')
   await check('Portable French optional branch works without destinations', `${ado}.querySelector('h1').textContent===${JSON.stringify(optionalText('fr')('title'))} && ${ado}.querySelector('.prompt-toolbar button').disabled && !!${ado}.querySelector('a[href="#implementation"]')`)
+  await evaluate(`(()=>{const current=new URL(location.href);current.searchParams.delete('lang');history.replaceState(null,'',current)})()`)
+  for (const locale of ['en', 'fr']) for (const experience of clients) {
+    const settings = { ...defaults, locale, experience, implementationSquad: 'delivery' }
+    await seed(settings, ['setup:planning-team', 'setup:promote', 'setup:delivery-team'])
+    await go('azure-design')
+    const design = `document.querySelector('.optional-design:not(.print-only)')`
+    await check(`design/${locale}/${experience} optional page and no implementation completion required`, `${design}.querySelector('h1').textContent===${JSON.stringify(designText(locale)('title'))} && !${design}.querySelector('.prompt-toolbar button').disabled && !!${design}.querySelector('a[href="#resume"]')`)
+    const expected = renderPrompt(designPrompt(locale), settings)
+    await click(`${design}.querySelector('.prompt-toolbar button')`)
+    assert.equal(await evaluate('window.__copied'), expected)
+    await click(`${design}.querySelector('[data-check-id="design-0"]')`)
+    await check(`design/${locale}/${experience} optional check never changes core progress`, `document.querySelector('progress').value===3 && document.querySelector('progress').max===25`)
+    await call('Page.reload')
+    await waitFor(() => evaluate(`!!${design}`), 'design reload')
+    await check(`design/${locale}/${experience} saved optional progress and explicit render prerequisites`, `${design}.querySelector('[data-check-id="design-0"]').checked && ${design}.textContent.includes('Graphviz') && ${design}.textContent.includes('PNG') && ${design}.textContent.includes('SVG')`)
+    await call('Emulation.setDeviceMetricsOverride', { width: 320, height: 844, deviceScaleFactor: 1, mobile: true })
+    await check(`design/${locale}/${experience} mobile has no overflow`, 'document.documentElement.scrollWidth<=innerWidth+1')
+    await screenshot(`onepoint-design-${locale}-${experience}`)
+    await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+    await go('resources')
+    await check(`scope/${locale}/${experience} complete inputs and separate scope download`, `document.querySelector('.resources:not(.print-only) .scope-download').textContent.includes('solution-scope.txt') && document.querySelector('.resources:not(.print-only) .scope-download').textContent.includes('architecture.png')`)
+  }
   assert.deepEqual(exceptions, [])
   assert.ok(requests.filter(request => /^https?:/.test(request)).every(request => request.startsWith(origin + '/')))
   results.push('No JavaScript exceptions or external application requests')
