@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { content } from '../src/locales.ts'
 import { apmReleaseUrl, apmVersion } from '../src/content.ts'
-import { agentSelection, clients, decodeState, defaults, missingSetup, modes, nextClient, renderPrompt, toggleCheckpoint } from '../src/state.ts'
+import { agentSelection, clients, decodeState, defaults, missingSetup, modes, newSettings, nextClient, renderPrompt, toggleCheckpoint } from '../src/state.ts'
 import { StateError, stateErrorText } from '../src/language.ts'
 import { translator } from '../src/ui.ts'
 import { previewReport } from '../src/report.ts'
@@ -28,7 +28,7 @@ test('old schema-1 state migrates without losing checks, client, installation or
   for (const experience of ['app', 'cli']) for (const install of ['plugin', 'apm']) {
     const settings = { experience, install, clientVersion: 'actual-client', squadVersion: 'actual-squad', coreVersion: 'actual-core', officeVersion: 'actual-office' }
     const checked = ['start-0', 'prepare-3', 'product-1', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
-    assert.deepEqual(decodeState(JSON.stringify({ schema: 1, checked, settings })), { schema: 1, checked, settings: { ...settings, locale: 'en', mode: 'autopilot' } })
+    assert.deepEqual(decodeState(JSON.stringify({ schema: 1, checked, settings })), { schema: 1, checked, settings: { ...newSettings, ...settings, locale: 'en', mode: 'autopilot' } })
   }
 })
 test('legacy modes migrate to mandatory autopilot without losing any saved workshop fields', () => {
@@ -38,7 +38,7 @@ test('legacy modes migrate to mandatory autopilot without losing any saved works
     const settings = { locale, experience, install, mode, clientVersion: 'saved-client', squadVersion: 'saved-squad', coreVersion: 'saved-core', officeVersion: 'saved-office' }
     const checked = ['start-0', 'prepare-3', 'product-1', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
     const migrated = decodeState(JSON.stringify({ schema: 1, checked, settings }))
-    assert.deepEqual(migrated, { schema: 1, checked, settings: { ...settings, mode: 'autopilot' } })
+    assert.deepEqual(migrated, { schema: 1, checked, settings: { ...newSettings, ...settings, mode: 'autopilot' } })
     assert.deepEqual(decodeState(JSON.stringify(migrated)), migrated, 'migration is idempotent')
   }
 })
@@ -77,15 +77,16 @@ test('all French lessons preserve stable structure, timing, checkpoint counts an
 for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of modes) {
   test(`${locale}/${experience}/${mode}: all seven exact payloads enforce autopilot except init/promote`, () => {
     const c = content[locale]
-    const settings = { ...defaults, locale, experience, mode }
+    const settings = { ...defaults, locale, experience, mode, implementationSquad: ' delivery-team ' }
     for (const [key, prompt] of Object.entries(allRequests(c))) {
       assert.equal(prompt.text, c.prompts[key])
       const actual = renderPrompt(prompt, settings)
+      const target = key === 'implementation' ? ' squad="delivery-team"' : ''
       const isLifecycle = ['planningInit', 'promote', 'deliveryInit'].includes(key)
       assert.equal(Object.hasOwn(prompt, 'businessMode'), false, 'no opt-in business-mode metadata')
       assert.equal(actual.includes('mode="autopilot"'), !isLifecycle)
       if (experience !== 'vscode') {
-        assert.equal(actual, isLifecycle ? prompt.text : `mode="autopilot"\n\n${prompt.text}`)
+        assert.equal(actual, isLifecycle ? prompt.text : `mode="autopilot"${target}\n\n${prompt.text}`)
         assert.doesNotMatch(actual, /^\/|request=/)
         continue
       }
@@ -93,7 +94,7 @@ for (const locale of ['en', 'fr']) for (const experience of clients) for (const 
       const lifecycle = key === 'promote' ? ' promote' : key === 'deliveryInit' ? ' init' : ''
       const mandatoryMode = isLifecycle ? '' : ' mode="autopilot"'
       const text = isLifecycle ? prompt.text.split('\n\n').slice(1).join('\n\n') : prompt.text
-      assert.equal(actual, `/${federation ? 'squad-federation' : 'squad'}${lifecycle}${mandatoryMode} request=${JSON.stringify(text)}`)
+      assert.equal(actual, `/${federation ? 'squad-federation' : 'squad'}${lifecycle}${mandatoryMode}${target} request=${JSON.stringify(text)}`)
       assert.equal(JSON.parse(actual.slice(actual.indexOf('request=') + 8)), text)
       assert.doesNotMatch(actual, /mode=(?:"?(?:interactive|autonomous|init|promote)|autopilot)|cost-ceiling|^\/\/|request="(?:init|promote)\\n/)
       assert.ok(!actual.includes('\n'), 'one complete copyable command, with escaped line breaks')

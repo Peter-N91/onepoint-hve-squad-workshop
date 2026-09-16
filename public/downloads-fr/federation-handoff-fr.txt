@@ -11,6 +11,9 @@ Mode obligatoire de l’atelier à consigner — mode="autopilot" (App/CLI/VS Co
 Confirmation d’initialisation :
 Promotion confirmée / chemins et livrables préservés :
 Équipe de réalisation réellement créée / chemin :
+Nom enregistré de l’équipe de réalisation (minuscules, pas un profil) :
+Source du backlog : fichier local revu ou identifiants Azure DevOps réels :
+Publication facultative : ignorée / bloquée / partielle / terminée (aucun prérequis pour réaliser) :
 Confirmation d’initialisation :
 
 PÉRIMÈTRE CONVENU

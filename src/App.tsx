@@ -1,7 +1,7 @@
 import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { apmReleaseUrl, apmVersion, lessons as canonicalLessons, lifecycleSteps as canonicalSteps } from './content'
 import type { Lesson, LessonStep, Prompt } from './content'
-import { agentSelection, autopilotDirective, clients, decodeState, defaults, missingSetup, nextClient, renderPrompt, setupCheckId, storageKey, toggleCheckpoint } from './state'
+import { agentSelection, autopilotDirective, clients, decodeState, defaults, destinationFields, missingPublicationFields, missingSetup, nextClient, promptTargetErrors, renderPrompt, setupCheckId, squadNameError, storageKey, toggleCheckpoint } from './state'
 import type { SavedState, Settings } from './state'
 import { content } from './locales'
 import { isLocale, localeNames, numberLocales, StateError, stateErrorText } from './language'
@@ -11,6 +11,7 @@ import type { UIKey } from './ui'
 import { localizedDownloads, fixtures } from './downloads'
 import { previewReport } from './report'
 import brandNotice from '../public/THIRD-PARTY-NOTICES.txt?raw'
+import { destinationLabels, optionalCheckIds, optionalText, publicationPrompt } from './optional'
 
 const logoUrl = `${import.meta.env.BASE_URL}hve-squad-logo.svg`
 const LocaleContext = createContext<Locale>('en')
@@ -53,7 +54,7 @@ function readInitial(): { data: SavedState; error: StorageProblem; invalidUrl: b
   let error: StorageProblem = null
   try {
     data = decodeState(localStorage.getItem(storageKey))
-    data.checked = data.checked.filter(id => checkIds.has(id))
+    data.checked = data.checked.filter(id => checkIds.has(id) || optionalCheckIds.some(optional => optional === id))
   } catch (cause) {
     data = { schema: 1, checked: [], settings: { ...defaults } }
     error = { kind: 'load', ...(cause instanceof StateError ? { code: cause.code, detail: cause.detail } : {}) }
@@ -127,6 +128,7 @@ function App() {
   const resetDialog = useRef<HTMLDialogElement>(null)
   const { locale } = saved.settings
   const t = translator(locale)
+  const ot = optionalText(locale)
   const { lessons, lifecycleSteps, prework, lab, sources, troubleshooting, installation, pdfReadiness, observationNote } = content[locale]
   useEffect(() => {
     const handle = () => { setPage(window.location.hash.slice(1) || 'overview'); setMenuOpen(false); setStatus('') }
@@ -141,8 +143,10 @@ function App() {
     document.title = `onepoint | ${translator(locale)('title')}`
   }, [locale])
   const active = lessons.find(lesson => lesson.id === page)
-  const selection = agentSelection(active?.launch?.entry ?? (['federation', 'implementation', 'resume'].includes(page) ? 'squad-federation' : 'squad'), saved.settings)
-  const progress = Math.round(saved.checked.length / checkIds.size * 100)
+  const promoted = saved.checked.includes(setupCheckId('promote'))
+  const selection = agentSelection(page === 'ado' ? publicationPrompt(locale, promoted).entry : active?.launch?.entry ?? (['federation', 'implementation', 'resume'].includes(page) ? 'squad-federation' : 'squad'), saved.settings)
+  const coreChecked = saved.checked.filter(id => checkIds.has(id))
+  const progress = Math.round(coreChecked.length / checkIds.size * 100)
   const firstPrework = prework.find(item => lessons.find(lesson => lesson.id === item.id)!.checks.some((_, index) => !saved.checked.includes(`${item.id}-${index}`)))
   function updateSaved(next: SavedState) {
     setSaved(next)
@@ -166,13 +170,16 @@ function App() {
   }
   function renderPromptBlock(prompt: Prompt) {
     const pending = missingSetup(prompt, saved.checked).map(step => lifecycleSteps.find(local => local.id === step.id)!)
-    const rendered = renderPrompt(prompt, saved.settings)
+    const targetErrors = promptTargetErrors(prompt, saved.settings)
+    const rendered = targetErrors.length ? null : renderPrompt(prompt, saved.settings)
     return <div className="prompt-block" data-prompt-kind={prompt.shell ? 'shell' : prompt.lifecycle ?? 'request'}>
       <div className="prompt-toolbar"><span>{t(prompt.shell ? 'shell' : prompt.lifecycle ? 'lifecycle' : 'business')}</span>
-        <button type="button" aria-label={`${t('copy')}: ${prompt.title}`} disabled={pending.length > 0} onClick={() => copy(rendered)}>{t('copy')}</button></div>
+        <button type="button" aria-label={`${t('copy')}: ${prompt.title}`} disabled={pending.length > 0 || rendered === null} onClick={() => { if (rendered !== null) void copy(rendered) }}>{t('copy')}</button></div>
       <h4>{prompt.title}</h4>
       {!prompt.shell && <p className="agent-hint">{agentSelection(prompt.entry, saved.settings).instruction} {saved.settings.experience !== 'vscode' && t('pasteOnly')}</p>}
-      <pre tabIndex={0}><code>{rendered}</code></pre>
+      {rendered === null ? <div className="prompt-warning" role="status"><strong>{ot('blocked')}</strong><ul>{targetErrors.map(error => <li key={error}>{stateErrorText(error, locale)}</li>)}</ul>
+        {prompt.publicationTarget && <p>{missingPublicationFields(saved.settings).map(key => destinationLabels[key][locale === 'fr' ? 1 : 0]).join(', ')}</p>}
+      </div> : <pre tabIndex={0}><code>{rendered}</code></pre>}
       {pending.length > 0 && <div className="prompt-warning">{t('confirmSteps')}<ul>{pending.map(step => <li key={step.id}><a href={`#${step.lessonId}`}>{step.title}</a></li>)}</ul><span>{t('locked')}</span></div>}
     </div>
   }
@@ -192,6 +199,53 @@ function App() {
       <p><code>apm --version</code> · {t('apmVersionExpected')}</p>
       <a href={apmReleaseUrl} target="_blank" rel="noreferrer">{t('apmVersionDownload')}</a>
     </div>
+  }
+  function renderSquadField(kind: 'implementation' | 'publication', printOnly = false) {
+    const field = kind === 'implementation' ? 'implementationSquad' : 'publicationSquad'
+    const error = squadNameError(saved.settings[field])
+    const id = `${field}${printOnly ? '-print' : ''}`
+    return <section className="repo-layout squad-target">
+      <label htmlFor={id}><strong>{ot(kind === 'implementation' ? 'squad' : 'planningSquad')}</strong></label>
+      <input id={id} data-setting={field} value={saved.settings[field]} maxLength={300} placeholder={ot('example')}
+        aria-invalid={Boolean(error)} aria-describedby={`${id}-help`}
+        onChange={event => updateSetting(field, event.target.value)} />
+      <p id={`${id}-help`} className="small">{ot(kind === 'implementation' ? 'squadHint' : 'planningHint')}</p>
+      {error && <p className="small" role="status">{stateErrorText(error, locale)}</p>}
+    </section>
+  }
+  function renderBranch() {
+    return <aside className="repo-layout optional-branch"><strong>{ot('badge')}</strong><p>{ot('intro')}</p><p>{ot('split')}</p>
+      <a className="button" href="#ado">{ot('title')}</a>{' '}<a href="#federation">{ot('continue')}</a>
+    </aside>
+  }
+  function renderPublication(printOnly = false) {
+    return <article className={printOnly ? 'resources optional-ado print-only' : 'resources optional-ado'} aria-label={ot('title')}>
+      <div className="eyebrow">{ot('badge')}</div><h1>{ot('title')}</h1>
+      <p className="lead">{ot('intro')}</p><p>{ot('timing')}</p><p>{ot('split')}</p>
+      <p>{ot('prerequisites')}</p>
+      <a href="https://github.com/microsoft/azure-devops-mcp" target="_blank" rel="noreferrer">Azure DevOps MCP</a>
+      <p>{ot(promoted ? 'afterPromotion' : 'beforePromotion')}</p>
+      {promoted && renderSquadField('publication', printOnly)}
+      <section className="repo-layout"><h2>{ot('destination')}</h2><p>{ot('privacy')}</p>
+        <div className="settings-grid">{destinationFields.map((key, index) => <label key={key}>
+          {destinationLabels[key][locale === 'fr' ? 1 : 0]} · {ot(index < 4 ? 'required' : 'optional')}
+          <input data-setting={key} maxLength={300} value={saved.settings[key]} aria-required={index < 4}
+            onChange={event => updateSetting(key, event.target.value)} />
+        </label>)}</div>
+      </section>
+      {renderPromptBlock(publicationPrompt(locale, promoted))}
+      <section><h2>{ot('review')}</h2><p>{ot('preview')}</p><p>{ot('evidence')}</p>
+        <h3>{ot('optionalProgress')}</h3>
+        {optionalCheckIds.map((id, index) => <label className="check-row" key={id}>
+          <input data-check-id={id} type="checkbox" checked={saved.checked.includes(id)} onChange={() => toggleCheck(id)} />
+          <span>{ot((['check0', 'check1', 'check2'] as const)[index])}</span>
+        </label>)}
+      </section>
+      <aside className="recovery"><h3>{t('blocked')}</h3><p>{ot('fallback')}</p></aside>
+      <nav className="lesson-navigation" aria-label={t('previousNext')}>
+        <a className="button primary" href="#federation">{ot('continue')}</a><a href="#implementation">{ot('implement')}</a>
+      </nav>
+    </article>
   }
   function renderLesson(lesson: Lesson, printOnly = false) {
     return <article key={lesson.id} className={printOnly ? 'lesson print-only' : 'lesson'} aria-label={lesson.title}>
@@ -214,6 +268,7 @@ function App() {
       </section>}
       {lesson.launch && <section className="phase-launch" aria-label={t('separateRequest')}>
         <span className="eyebrow">{t('outcomeCaption')}</span><h2>{t(lesson.id === 'product' ? 'requestPlanning' : 'requestImplementation')}</h2>
+        {lesson.id === 'implementation' && <><p>{ot('local')}</p>{renderSquadField('implementation', printOnly)}</>}
         <p>{lesson.launchHint}</p>{renderPromptBlock(lesson.launch)}
       </section>}
       {lesson.behaviors && <section className="behavior-panel"><span className="eyebrow">{t('observeCaption')}</span><h2>{t('behaviors')}</h2><ul>{lesson.behaviors.map(behavior => <li key={behavior}>{behavior}</li>)}</ul><p className="small">{observationNote}</p></section>}
@@ -239,6 +294,7 @@ function App() {
       <div className="checkpoint-grid"><section className="evidence-card"><span className="eyebrow">{t('deliverables')}</span><h2>{t('evidence')}</h2><ul>{lesson.evidence.map(item => <li key={item}>{item}</li>)}</ul></section>
         <section className="check-card"><span className="eyebrow">{t('checkpoint')}</span><h2>{t('showIt')}</h2>{lesson.checks.map((item, index) => <label className="check-row" key={index}><input type="checkbox" data-check-id={`${lesson.id}-${index}`} checked={saved.checked.includes(`${lesson.id}-${index}`)} onChange={() => toggleCheck(`${lesson.id}-${index}`)} /><span>{item}</span></label>)}<p className="small">{t('selfReport')}</p></section></div>
       <aside className="recovery"><h3>{t('blocked')}</h3><p>{lesson.recovery}</p></aside>
+      {lesson.id === 'product' && renderBranch()}
     </article>
   }
   const nextLesson = active ? lessons[lessons.indexOf(active) + 1] : undefined
@@ -266,11 +322,11 @@ function App() {
           {lessons.map(lesson => {
             const count = lesson.checks.filter((_, index) => saved.checked.includes(`${lesson.id}-${index}`)).length + (lesson.setup ?? []).filter(step => saved.checked.includes(setupCheckId(step.id))).length
             const total = lesson.checks.length + (lesson.setup?.length ?? 0)
-            return <Fragment key={lesson.id}>{lesson.id === 'start' && <div className="nav-group">{t('navPrework')}</div>}{lesson.id === 'product' && <div className="nav-group">{t('navLive')}</div>}<a href={`#${lesson.id}`} aria-current={page === lesson.id ? 'page' : undefined}><span className="nav-number">{count === total ? '✓' : lesson.number}</span><span>{lesson.title}<small>{prework.some(item => item.id === lesson.id) ? t('preworkZero') : `${lesson.minutes} ${t('liveMinutes')}`}</small></span></a></Fragment>
+            return <Fragment key={lesson.id}>{lesson.id === 'start' && <div className="nav-group">{t('navPrework')}</div>}{lesson.id === 'product' && <div className="nav-group">{t('navLive')}</div>}<a href={`#${lesson.id}`} aria-current={page === lesson.id ? 'page' : undefined}><span className="nav-number">{count === total ? '✓' : lesson.number}</span><span>{lesson.title}<small>{prework.some(item => item.id === lesson.id) ? t('preworkZero') : `${lesson.minutes} ${t('liveMinutes')}`}</small></span></a>{lesson.id === 'product' && <a className="optional-link" href="#ado" aria-current={page === 'ado' ? 'page' : undefined}><span>＋</span><span>{ot('title')}<small>{ot('optionalProgress')}</small></span></a>}</Fragment>
           })}
           <a href="#lab" aria-current={page === 'lab' ? 'page' : undefined}><span>◇</span>{t('lab')}</a><a href="#resources" aria-current={page === 'resources' ? 'page' : undefined}><span>＋</span>{t('resources')}</a>
         </nav>
-        <div className="progress-box"><div><strong>{t('progress')}</strong><span>{progress}%</span></div><progress value={saved.checked.length} max={checkIds.size} aria-label={t('progressAria')} /><p>{saved.checked.length} {t('of')} {checkIds.size} {t('checkpoints')}</p><button type="button" onClick={exportProgress}>{t('export')}</button></div>
+        <div className="progress-box"><div><strong>{t('progress')}</strong><span>{progress}%</span></div><progress value={coreChecked.length} max={checkIds.size} aria-label={t('progressAria')} /><p>{coreChecked.length} {t('of')} {checkIds.size} {t('checkpoints')}</p><button type="button" onClick={exportProgress}>{t('export')}</button></div>
         <div className="discussion-note"><span className="eyebrow">{t('protectedTime')}</span><strong>12:00–12:30</strong><span>{t('stopBuilding')}</span></div>
       </aside>
       <main id="main" className="main-content" ref={heading} tabIndex={-1}>
@@ -301,17 +357,19 @@ function App() {
           <section className="hero"><div className="eyebrow">{t('heroEyebrow')}</div><h1>{t('titleFirst')}<br /><em>{t('titleLast')}</em></h1><p className="lead">{t('subtitle')}</p><p>{t('heroIntro')}</p><div className="hero-actions"><a className="button primary" href={`#${firstPrework?.id ?? 'product'}`}>{firstPrework ? `${t('beginPrework')} ${firstPrework.number}` : t('ready')} →</a><a className="button" href={firstPrework ? '#product' : '#start'}>{t(firstPrework ? 'alreadyReady' : 'reviewPrework')}</a></div><div className="hero-meta"><span><strong>09:00–12:30</strong>{t('totalMinutes')}</span><span><strong>30 minutes</strong>{t('finalDiscussion')}</span><span><strong>{t('beforeThursday')}</strong>{t('partsPrework')}</span></div></section>
           <PreworkPanel />
           <section className="method-note"><h2>{t('methodTitle')}</h2><p><strong>{t('sequence')}</strong></p><p>{t('methodNote')}</p></section>
+          {renderBranch()}
           <section className="journey-panel"><div className="section-heading"><h2>{t('continuous')}</h2><span className="badge">{t('learnMethod')}</span></div><div className="journey"><div><span>03</span><strong>{t('scope')}</strong><small>BRD · PRD · MVE</small></div><span className="arrow">→</span><div><span>04</span><strong>{t('federate')}</strong><small>{t('planningDelivery')}</small></div><span className="arrow">→</span><div><span>05</span><strong>{t('test')}</strong><small>{t('officeSynthetic')}</small></div><span className="arrow">→</span><div><span>06–07</span><strong>{t('resumeDiscuss')}</strong><small>{t('evidenceNext')}</small></div></div></section>
           <div className="overview-grid"><LiveAgenda /><section className="outcome-card"><span className="eyebrow">{t('realOutcome')}</span><h2>{t('repeat')}</h2><p>{t('repeatNote')}</p><ul>{(['twoTargets', 'sliceAgree', 'syntheticLocal', 'distinction'] as const).map(key => <li key={key}>{t(key)}</li>)}</ul><div className="inset"><strong>MVE ≠ MVP</strong><p>{t('experimentNote')}</p></div></section></div>
           <section className="privacy-note"><h3>{t('generic')}</h3><p>{lab.status}. {t('privacyNote')} <a href="#lab">{t('lab')}</a></p></section>
-        </div> : active ? renderLesson(active) : page === 'lab' ? <Lab /> : page === 'resources' ? <article className="resources">
+        </div> : active ? renderLesson(active) : page === 'ado' ? renderPublication() : page === 'lab' ? <Lab /> : page === 'resources' ? <article className="resources">
           <div className="eyebrow">{t('resourcesEyebrow')}</div><h1>{t('resources')}</h1><p className="lead">{t('resourcesLead')}</p><PreworkPanel /><LiveAgenda /><DownloadPanel />
+          {renderBranch()}
           <section><h2>{t('troubleshooting')}</h2>{troubleshooting.map(([title, body], index) => <details key={index}><summary>{title}</summary><p>{body}</p></details>)}</section>
           <section><h2>{t('references')}</h2><p>{t('referencesNote')}</p>{renderVscodeReference()}<ul className="source-list">{sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.name} ↗</a></li>)}</ul><p className="small">{t('attribution')}</p><details><summary>{t('license')}</summary><pre className="brand-notice" lang="en">{brandNotice}</pre></details></section>
-          <section><h2>{t('browserData')}</h2><p>{t('browserNote')}</p><p>{saved.checked.length} {t('of')} {checkIds.size} {t('reported')} ({progress}%).</p><button type="button" onClick={exportProgress}>{t('export')}</button><button type="button" className="danger" onClick={() => setResetOpen(true)}>{t('resetLocal')}</button></section>
+          <section><h2>{t('browserData')}</h2><p>{t('browserNote')}</p><p>{ot('privacy')}</p><p>{coreChecked.length} {t('of')} {checkIds.size} {t('reported')} ({progress}%).</p><button type="button" onClick={exportProgress}>{t('export')}</button><button type="button" className="danger" onClick={() => setResetOpen(true)}>{t('resetLocal')}</button></section>
         </article> : <section><h1>{t('notFound')}</h1><p>{t('notFoundNote')}</p><a href="#overview">{t('returnOverview')}</a></section>}
         {active && <nav className="lesson-navigation" aria-label={t('previousNext')}><a href={`#${previousLesson?.id ?? 'overview'}`}>← {previousLesson?.title ?? t('overview')}</a><a className="button primary" href={`#${nextLesson?.id ?? 'resources'}`}>{active.id === 'prepare' ? t('ready') : nextLesson?.title ?? t('resources')} →</a></nav>}
-        {lessons.map(lesson => renderLesson(lesson, true))}<Lab printOnly />
+        {lessons.map(lesson => renderLesson(lesson, true))}{renderPublication(true)}<Lab printOnly />
         <section className="print-only print-sources"><h2>{t('sourcesMaterials')}</h2><p>{t('printNote')}</p><p>{t('modeNote')}</p><p>{t('autopilotWarning')}</p>{saved.settings.experience === 'vscode' && <><p>{t('vscodeUse')}</p><p>{t('parametersNote')}</p><ul>{(['paramRequest', 'paramSquad', 'paramProfile', 'paramPack', 'paramDiscovery', 'paramTier', 'paramOwner'] as const).map(key => <li key={key}>{t(key)}</li>)}</ul></>}<ul>{sources.map(source => <li key={source.url}>{source.name}: {source.url}</li>)}</ul><h3>{t('license')}</h3><pre className="brand-notice" lang="en">{brandNotice}</pre></section>
         <footer><span>onepoint · {t('workshop')}</span><span>{t('date')} · {t('baseline')}</span></footer>
       </main>

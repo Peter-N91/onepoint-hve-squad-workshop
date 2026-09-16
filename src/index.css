@@ -238,6 +238,9 @@ details>p:last-child { margin-bottom: 0; }
 .settings-grid label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; }
 .settings-grid input { min-width: 0; padding: 10px 12px; border: 1px solid var(--cp-border-strong); border-radius: 8px; background: var(--cp-bg-elevated); color: var(--cp-text); font-size: 13px; }
 .settings-grid input::placeholder { color: var(--cp-text-soft); }
+.squad-target input { display: block; width: 100%; min-width: 0; margin: 12px 0; padding: 10px 12px; border: 1px solid var(--cp-border-strong); border-radius: 8px; background: var(--cp-bg-elevated); color: var(--cp-text); }
+.optional-ado, .optional-branch { overflow-wrap: anywhere; }
+.optional-ado .settings-grid { margin: 16px 0; }
 .danger { color: var(--cp-danger); margin-left: 8px; }
 .reset-dialog { padding: 32px; max-width: min(540px, calc(100vw - 40px)); color: var(--cp-text); background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; box-shadow: var(--cp-shadow); }
 .reset-dialog::backdrop { background: var(--cp-overlay); }

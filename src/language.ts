@@ -15,6 +15,11 @@ export const stateMessages = {
     mode: 'Unknown saved mode. Expected a recognized legacy setting or autopilot.',
     cycle: 'Circular setup prerequisite',
     prerequisite: 'Unknown setup prerequisite',
+    squadMissing: 'Enter the exact registered squad name before copying this request.',
+    squadInvalid: 'Use the registered lowercase name: letters, digits and hyphens, starting with a letter or digit.',
+    targetContext: 'A squad target is only valid on a federation work request.',
+    publicationMissing: 'Complete the required Azure DevOps destination fields before copying.',
+    targetField: 'Invalid saved destination field',
   },
   fr: {
     format: 'Le format de progression enregistré n’est pas pris en charge.',
@@ -26,6 +31,11 @@ export const stateMessages = {
     mode: 'Mode enregistré inconnu. Une ancienne valeur reconnue ou autopilot est attendu.',
     cycle: 'Dépendance d’initialisation circulaire',
     prerequisite: 'Prérequis d’initialisation inconnu',
+    squadMissing: 'Saisissez le nom exact de l’équipe enregistrée avant de copier cette demande.',
+    squadInvalid: 'Utilisez le nom enregistré en minuscules : lettres, chiffres et tirets, commençant par une lettre ou un chiffre.',
+    targetContext: 'Une équipe cible est réservée à une demande de travail de fédération.',
+    publicationMissing: 'Complétez les champs obligatoires de destination Azure DevOps avant de copier.',
+    targetField: 'Champ de destination enregistré invalide',
   },
 } satisfies Record<Locale, Record<string, string>>
 export type StateErrorCode = keyof typeof stateMessages.en

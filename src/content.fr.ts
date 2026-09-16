@@ -181,7 +181,7 @@ const lessonCopies = {
     inputs: ['Équipe de réalisation initialisée', 'Backlog et décisions revus, incrément approuvé', 'Jeu JSON synthétique téléchargé ; aucun accès de production requis'],
     concept: 'Le petit incrément Word est une proposition pédagogique à approuver, pas un produit complet imposé. Conservez les deux cibles Office. Implémentation, test du moteur, aperçu web et validation dans l’application sont quatre états distincts.',
     launchHint: '3. Après les deux confirmations, envoyez cette demande séparée. Revoyez et approuvez le plan d’implémentation proposé avant son exécution.',
-    launch: { title: 'Implémenter la première version convenue', entry: 'squad-federation', requiresSetup: ['delivery-team'], text: prompts.implementation },
+    launch: { title: 'Implémenter la première version convenue', entry: 'squad-federation', requiresSetup: ['delivery-team'], squadTarget: 'implementation', text: prompts.implementation },
     behaviors: ['L’implémentation suit l’incrément et ses dépendances sans élargir discrètement le périmètre.', 'Les ambiguïtés métier et changements significatifs nécessitent une décision humaine.', 'Le bilan distingue exécuté, simulé, bloqué et non exécuté ; les erreurs ne deviennent pas des zéros.'],
     steps: [
       { title: '10:40–11:00 · Approuver le plan', body: 'Confirmez les éléments du backlog et l’application. Sans périmètre revu, convenez d’un incrément avant de construire. Téléchargez le jeu Report Studio et placez-le dans data\\report-studio-fixture.json à la racine du dépôt participant ; créez data si nécessaire. Définissez le contrat : période, périmètre, trois nombres, provenance, date et version.' },

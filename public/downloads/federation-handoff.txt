@@ -11,6 +11,9 @@ Planning team actually created / path:
 Initialization confirmation:
 Confirmed promotion / preserved paths and artifacts:
 Delivery team actually created / path:
+Registered implementation squad name (exact lowercase name, not a profile):
+Backlog source: reviewed local file or actual Azure DevOps item IDs:
+Optional publication: skipped / blocked / partial / completed (not a delivery prerequisite):
 Initialization confirmation:
 
 AGREED SCOPE

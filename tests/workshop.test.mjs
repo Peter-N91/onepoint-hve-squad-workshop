@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { agenda, architecture, baseline, installation, lab, lessons, lifecycleSteps, observationNote, pdfReadiness, prework, prompts, repositorySetup, sources, troubleshooting } from '../src/content.ts'
-import { agentSelection, decodeState, defaults, missingSetup, renderPrompt, setupCheckId, storageKey, toggleCheckpoint } from '../src/state.ts'
+import { agentSelection, decodeState, defaults, missingSetup, newSettings, renderPrompt, setupCheckId, storageKey, toggleCheckpoint } from '../src/state.ts'
 import { previewReport } from '../src/report.ts'
 
 const read = path => readFile(new URL(path, import.meta.url), 'utf8')
@@ -112,13 +112,13 @@ test('invalid progress is rejected without silent replacement', () => {
 test('workstation settings are bounded and contain no connection data', () => {
   const result = decodeState(JSON.stringify({ schema: 1, checked: [], settings: { ...defaults, officeVersion: 'a'.repeat(400) } }))
   assert.equal(result.settings.officeVersion.length, 300)
-  assert.deepEqual(Object.keys(defaults).sort(), ['clientVersion', 'coreVersion', 'experience', 'install', 'locale', 'mode', 'officeVersion', 'squadVersion'])
+  assert.deepEqual(Object.keys(defaults).sort(), [...Object.keys(newSettings), 'clientVersion', 'coreVersion', 'experience', 'install', 'locale', 'mode', 'officeVersion', 'squadVersion'].sort())
 })
 test('App and CLI receive mandatory autopilot requests, unchanged lifecycle and shell blocks, never a slash skill', () => {
   for (const experience of ['app', 'cli']) for (const lesson of lessons) {
     for (const prompt of [lesson.launch, ...lesson.steps.map(step => step.prompt), ...(lesson.setup ?? []).map(step => step.request)].filter(Boolean)) {
-      const actual = renderPrompt(prompt, { ...defaults, experience })
-      assert.equal(actual, prompt.shell || prompt.lifecycle ? prompt.text : `mode="autopilot"\n\n${prompt.text}`)
+      const actual = renderPrompt(prompt, { ...defaults, experience, implementationSquad: 'delivery' })
+      assert.equal(actual, prompt.shell || prompt.lifecycle ? prompt.text : `mode="autopilot"${prompt.squadTarget ? ' squad="delivery"' : ''}\n\n${prompt.text}`)
       assert.ok(!/\/squad|profile\s*=|request=/.test(actual))
     }
   }

@@ -30,6 +30,20 @@ At 11:45, stop adding scope and preserve actual evidence for resumption.
 Do not consume the final thirty-minute discussion.
 
 CLIENT CHOICE
+Optional branch after the reviewed local backlog: open #ado in the companion.
+Some participants can publish to Azure DevOps while others continue to federation
+and implementation. Publication adds no required progress or fixed agenda time.
+Missing access or skipped publication never blocks later steps; the reviewed
+local backlog remains the implementation input. Agree ownership and prefixes
+before sharing a repository or tracker. Preview and explicitly approve the exact
+batch before writes; record actual IDs, links, duplicates and partial failures.
+
+For First slice and evidence, enter the exact registered delivery squad name.
+App/CLI copies start mode="autopilot" squad="your-registered-name"; VS Code uses
+/squad-federation mode="autopilot" squad="your-registered-name" request="..."
+The name above is illustrative only. Copy is blocked until the real name
+and the existing setup confirmations are supplied. No ADO completion is required.
+
 App/CLI: choose Squad Coordinator through the App agent list or CLI /agent;
 prepend mode="autopilot" and a blank line to every plain request except
 init/promote, which remain unchanged. For VS Code, prepare this repository and knowledge-docs,
@@ -48,7 +62,8 @@ Federation promote and init are standalone flags, not mode values.
 All clients require exact mode="autopilot" for every non-lifecycle request,
 including readiness, product, implementation and read-only resumption.
 VS Code: /squad mode="autopilot" request="..." for readiness/product;
-/squad-federation mode="autopilot" request="..." for implementation/resumption.
+/squad-federation mode="autopilot" squad="your-registered-name" request="..." for implementation;
+/squad-federation mode="autopilot" request="..." for resumption.
 Exceptions: /squad request="..." for planning init;
 /squad-federation promote request="..." and
 /squad-federation init request="..." for federation lifecycle only.

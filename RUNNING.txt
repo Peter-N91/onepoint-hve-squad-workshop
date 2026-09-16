@@ -184,10 +184,57 @@ VS Code main blocks are COMPLETE COPYABLE commands, not terminal commands:
   product: /squad mode="autopilot" request="..."
   promotion: /squad-federation promote request="..."
   delivery init: /squad-federation init request="..."
-  implementation: /squad-federation mode="autopilot" request="..."
+  implementation: /squad-federation mode="autopilot" squad="registered-name" request="..."
   read-only resume: /squad-federation mode="autopilot" request="..."
 The ellipses above describe syntax only; use the full guide blocks.
 Quotes, backslashes and newlines are JSON-escaped in request.
+TARGETED IMPLEMENTATION — PART 05
+Part 05 requires the exact registered implementation squad name. Enter it
+in First slice and evidence, using lowercase letters, digits and hyphens.
+The name is not a profile label; the guide checks syntax, not registration.
+Copy stays disabled until the name and existing setup confirmations are valid.
+App/CLI: mode="autopilot" squad="delivery" then the full request.
+VS Code: /squad-federation mode="autopilot" squad="delivery" request="..."
+"delivery" is only an example, never a preselected team. Use the actual name.
+
+OPTIONAL AZURE DEVOPS BRANCH — #ado
+After Part 03 local backlog review, some participants may publish while others
+continue directly to Part 04/05. The local reviewed backlog is required;
+publishing it is not. The optional branch adds no fixed agenda slot, core
+checkpoint or main progress denominator. Its ado-0/1/2 checks are stored but
+excluded from core completion, prerequisite checks and next-step decisions.
+Skipping, missing access or partial publication never blocks Parts 04–07.
+Agree ownership, working copies and participant prefixes for parallel work.
+Organization, project, participant scope and documentation destination are
+required only for the optional request. Process, area and iteration are optional.
+After promotion, the branch uses the federation and requires the actual
+registered planning squad name rather than reinitializing moved team state.
+The request previews the exact batch; explicit approval in the agent chat is
+required before writes. Inspect real IDs, hierarchy, duplicates and document
+links; record partial completion and resume without replaying finished work.
+No ADO authentication or writes occur in this website. No PAT/REST workaround.
+Targets stay browser-local but appear in copied requests and progress exports.
+Review before sharing; enter no credentials. Old schema-1 data defaults new
+fields to empty and retains all original progress. Invalid values are surfaced.
+
+CIBLE DE RÉALISATION ET AZURE DEVOPS FACULTATIF
+La partie 05 exige le nom exact enregistré de l’équipe de réalisation,
+en minuscules (lettres, chiffres, tirets), pas un profil. Le guide vérifie
+le format, pas l’appartenance à la fédération. Aucun nom n’est présélectionné.
+La copie inclut mode="autopilot" squad="nom-reel" dans l’App/CLI et dans
+la commande /squad-federation de VS Code. Les confirmations restent nécessaires.
+Le parcours #ado après la revue du backlog local est facultatif : certains
+publient, d’autres avancent vers les parties 04/05. Aucun champ ni jalon ADO
+ne bloque la suite ni ne modifie la progression principale ou le programme.
+Le backlog local revu reste nécessaire. Convenez des responsabilités et
+préfixes pour éviter les conflits entre participants travaillant en parallèle.
+Renseignez les destinations autorisées uniquement pour publier. Après promotion,
+utilisez l’équipe de planification enregistrée via la fédération, sans recréation.
+Prévisualisez le lot exact, approuvez avant écriture dans le chat de l’agent,
+vérifiez identifiants/liens réels et préservez les opérations partiellement réussies.
+Le site ne s’authentifie pas et n’écrit pas dans ADO. Les champs restent locaux
+mais sont inclus dans les demandes et exports ; relisez avant partage.
+
 MANDATORY WORKSHOP POLICY — ALL CLIENTS (App, CLI and VS Code)
 Use exact mode="autopilot" on every request except init and promote:
 readiness, product, implementation, read-only resumption and future requests.
@@ -294,7 +341,8 @@ Les blocs principaux sont des commandes complètes, à coller dans Chat :
 /squad request="..." pour initialisation de planification ;
 /squad-federation promote request="..." pour promotion ;
 /squad-federation init request="..." pour initialisation de réalisation ;
-/squad-federation mode="autopilot" request="..." pour implémentation et reprise.
+/squad-federation mode="autopilot" squad="nom-enregistre" request="..." pour l’implémentation ;
+/squad-federation mode="autopilot" request="..." pour la reprise.
 Ces points de suspension expliquent la syntaxe ; copiez le bloc complet du
 guide. L’initialisation d’équipe unique n’a pas de drapeau init autonome.
 RÈGLE OBLIGATOIRE — TOUS LES CLIENTS (App, CLI et VS Code)

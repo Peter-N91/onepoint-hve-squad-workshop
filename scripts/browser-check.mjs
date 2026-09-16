@@ -8,13 +8,15 @@ import { agenda, prework, prompts } from '../src/content.ts'
 import { content } from '../src/locales.ts'
 import { translator } from '../src/ui.ts'
 import { clients, defaults, modes, renderPrompt, storageKey } from '../src/state.ts'
+import { optionalText, publicationPrompt } from '../src/optional.ts'
 
 function expectedPrompt(prompt, settings) {
   if (prompt.shell) return prompt.text
-  if (settings.experience !== 'vscode') return prompt.lifecycle ? prompt.text : `mode="autopilot"\n\n${prompt.text}`
+  const squad = prompt.squadTarget ? ` squad=${JSON.stringify(settings[prompt.squadTarget === 'implementation' ? 'implementationSquad' : 'publicationSquad'].trim())}` : ''
+  if (settings.experience !== 'vscode') return prompt.lifecycle ? prompt.text : `mode="autopilot"${squad}\n\n${prompt.text}`
   const text = prompt.lifecycle ? prompt.text.replace(/^(?:init|promote)\r?\n\r?\n/, '') : prompt.text
   const entry = prompt.entry ?? 'squad'
-  return `/${entry}${entry === 'squad-federation' && prompt.lifecycle ? ` ${prompt.lifecycle}` : ''}${prompt.lifecycle ? '' : ' mode="autopilot"'} request=${JSON.stringify(text)}`
+  return `/${entry}${entry === 'squad-federation' && prompt.lifecycle ? ` ${prompt.lifecycle}` : ''}${prompt.lifecycle ? '' : ' mode="autopilot"'}${squad} request=${JSON.stringify(text)}`
 }
 
 function requestCases(c) {
@@ -157,7 +159,10 @@ try {
   await click(`${visibleLesson}.querySelector('[data-setup-id="promote"] input')`)
   await click(`${visibleLesson}.querySelector('[data-setup-id="delivery-team"] input')`)
   await go('implementation')
-  await check('Three confirmations unlock implementation', `!${visibleLesson}.querySelector('.phase-launch button').disabled`)
+  await check('Three confirmations still require a registered implementation target', `${visibleLesson}.querySelector('.phase-launch button').disabled && !${visibleLesson}.querySelector('.phase-launch code')`)
+  await evaluate(`(()=>{const input=${visibleLesson}.querySelector('[data-setting="implementationSquad"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'delivery');input.dispatchEvent(new Event('input',{bubbles:true}))})()`)
+  await sleep(100)
+  await check('Three confirmations and a valid name unlock implementation', `!${visibleLesson}.querySelector('.phase-launch button').disabled`)
   await call('Page.reload')
   await waitFor(() => evaluate(`!!${visibleLesson}`), 'reload')
   await check('Progress preserved after reload', `!${visibleLesson}.querySelector('.phase-launch button').disabled`)
@@ -323,7 +328,8 @@ try {
     for (const [page, selector, prompt] of requestCases(content[locale])) {
       const number = content[locale].lessons.find(l => l.id === page).number
       const actual = await evaluate(`[...document.querySelectorAll('.lesson.print-only')].find(lesson=>lesson.querySelector('.big-number').textContent===${JSON.stringify(number)}).querySelector(${JSON.stringify(selector + ' pre')}).textContent`)
-      assert.equal(actual, expectedPrompt(prompt, { experience }), label + ' print ' + page + '/' + (prompt.lifecycle ?? 'request'))
+      const settings = await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).settings`)
+      assert.equal(actual, expectedPrompt(prompt, { ...settings, experience }), label + ' print ' + page + '/' + (prompt.lifecycle ?? 'request'))
     }
     results.push(label + ' all seven printed commands enforce policy with lifecycle exceptions')
   }
@@ -333,7 +339,7 @@ try {
     const t = translator(locale)
     for (const experience of clients) {
       const mode = 'autopilot'
-      const settings = { ...defaults, locale, experience, mode, clientVersion: 'QA version', coreVersion: 'QA core', squadVersion: 'QA squad', officeVersion: 'Not executed' }
+      const settings = { ...defaults, locale, experience, mode, implementationSquad: 'delivery', clientVersion: 'QA version', coreVersion: 'QA core', squadVersion: 'QA squad', officeVersion: 'Not executed' }
       const tag = `${locale}/${experience}/${mode}`
       await seed(settings)
       await assertPolicy(tag, locale)
@@ -468,7 +474,7 @@ try {
   const migratedChecks = ['start-0', 'prepare-3', 'product-1', 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
   for (const locale of ['en', 'fr']) for (const experience of clients) for (const mode of [undefined, ...modes]) {
     const tag = `${locale}/${experience}/legacy-${mode ?? 'missing'}`
-    const settings = { ...defaults, locale, experience, mode, install: 'apm', clientVersion: 'legacy-client', squadVersion: 'legacy-squad', coreVersion: 'legacy-core', officeVersion: 'legacy-office' }
+    const settings = { ...defaults, locale, experience, mode, implementationSquad: 'delivery', install: 'apm', clientVersion: 'legacy-client', squadVersion: 'legacy-squad', coreVersion: 'legacy-core', officeVersion: 'legacy-office' }
     await seed(settings, migratedChecks)
     await assertPolicy(tag, locale)
     const expectedState = { schema: 1, checked: migratedChecks, settings: { ...settings, mode: 'autopilot' } }
@@ -540,7 +546,7 @@ try {
     await waitFor(() => evaluate(`!!document.querySelector('.hero')`), locale + ' standalone opened')
     await check(`${locale} standalone document and embedded logo`, `document.documentElement.lang===${JSON.stringify(locale)} && document.querySelector('.hero h1').textContent===${JSON.stringify(translator(locale)('title'))} && document.querySelector('.brand img').src.startsWith('data:image/svg+xml;base64,') && document.querySelectorAll('script[src],link[rel="stylesheet"]').length===0`)
     for (const experience of clients) {
-      const settings = { ...defaults, locale, experience, mode: 'autonomous' }
+      const settings = { ...defaults, locale, experience, implementationSquad: 'delivery', mode: 'autonomous' }
       await seed(settings, migratedChecks)
       await assertPolicy(`${locale}/${experience} standalone legacy autonomous`, locale)
       await click(`document.getElementById('experience-${experience}')`)
@@ -574,6 +580,83 @@ try {
   }
   assert.ok(requests.slice(standaloneStart).filter(request => /^(file|https?):/.test(request)).every(request => request.includes('onepoint-workshop-portable.html')))
   results.push('Both standalone languages, all clients, mandatory autopilot and eight downloads use no external app requests')
+  // Optional publication is an independent practice branch, never core progress.
+  await call('Page.navigate', { url: url + '?scoutTheme=light#ado' })
+  await waitFor(() => evaluate(`!!document.querySelector('.optional-ado:not(.print-only)')`), 'optional branch loaded')
+  const ado = `document.querySelector('.optional-ado:not(.print-only)')`
+  const setInput = async (selector, value) => {
+    await evaluate(`(()=>{const input=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,${JSON.stringify(value)});input.dispatchEvent(new Event('input',{bubbles:true}));})()`)
+    await sleep(100)
+  }
+  const allCoreChecks = [...content.en.lessons.flatMap(l => l.checks.map((_, i) => `${l.id}-${i}`)), 'setup:planning-team', 'setup:promote', 'setup:delivery-team']
+  for (const locale of ['en', 'fr']) for (const experience of clients) {
+    const settings = { ...defaults, locale, experience }
+    const tag = `optional/${locale}/${experience}`
+    const ot = optionalText(locale)
+    await seed(settings, ['setup:planning-team'])
+    await go('ado')
+    await check(`${tag} optional page and skip links`, `${ado}.querySelector('h1').textContent===${JSON.stringify(ot('title'))} && !!${ado}.querySelector('a[href="#federation"]') && !!${ado}.querySelector('a[href="#implementation"]')`)
+    await check(`${tag} missing destination blocks only optional copy`, `${ado}.querySelector('.prompt-toolbar button').disabled && !${ado}.querySelector('.prompt-block code')`)
+    const before = await evaluate(`({value:document.querySelector('progress').value,max:document.querySelector('progress').max})`)
+    await click(`${ado}.querySelector('[data-check-id="ado-0"]')`)
+    assert.deepEqual(await evaluate(`({value:document.querySelector('progress').value,max:document.querySelector('progress').max})`), before)
+    await call('Page.reload')
+    await waitFor(() => evaluate(`!!${ado}`), 'optional checkpoint reload')
+    await check(`${tag} optional check persists without core progress change`, `${ado}.querySelector('[data-check-id="ado-0"]').checked && document.querySelector('progress').value===1 && document.querySelector('progress').max===25`)
+    await go('federation')
+    await check(`${tag} skip publication allows promotion with blank ADO fields`, `!${visibleLesson}.querySelector('[data-setup-id="promote"] button').disabled`)
+    await seed(settings, ['setup:planning-team', 'setup:promote', 'setup:delivery-team'])
+    await go('implementation')
+    await check(`${tag} implementation needs squad, not ADO`, `${visibleLesson}.querySelector('.phase-launch button').disabled && !${visibleLesson}.querySelector('.phase-launch code') && !${visibleLesson}.textContent.includes(${JSON.stringify(ot('destination'))})`)
+    for (const name of ['BadName', 'two teams', 'team" mode="other', '../team']) {
+      await setInput('article.lesson:not(.print-only) [data-setting="implementationSquad"]', name)
+      await check(`${tag} invalid squad ${JSON.stringify(name)} blocks copy`, `${visibleLesson}.querySelector('.phase-launch button').disabled && !${visibleLesson}.querySelector('.phase-launch code')`)
+    }
+    await setInput('article.lesson:not(.print-only) [data-setting="implementationSquad"]', ' delivery-2 ')
+    const request = content[locale].lessons.find(l => l.id === 'implementation').launch
+    const expected = expectedPrompt(request, { ...settings, implementationSquad: 'delivery-2' })
+    await check(`${tag} valid registered name gives targeted request`, `!${visibleLesson}.querySelector('.phase-launch button').disabled && ${visibleLesson}.querySelector('.phase-launch code').textContent===${JSON.stringify(expected)}`)
+    await click(`${visibleLesson}.querySelector('.phase-launch button')`)
+    assert.equal(await evaluate('window.__copied'), expected)
+    await setLanguage(locale === 'en' ? 'fr' : 'en')
+    await check(`${tag} squad and setup survive language switch`, `${visibleLesson}.querySelector('[data-setting="implementationSquad"]').value===' delivery-2 ' && !${visibleLesson}.querySelector('.phase-launch button').disabled`)
+    await setLanguage(locale)
+    await go('ado')
+    await check(`${tag} returning after promotion requests planning target`, `!!${ado}.querySelector('[data-setting="publicationSquad"]') && ${ado}.querySelector('.prompt-toolbar button').disabled`)
+    const values = { organization: 'workshop-org', project: 'Project "quoted"', participant: 'team-2', documentTarget: 'Approved Wiki', publicationSquad: 'planning' }
+    for (const [field, value] of Object.entries(values)) await setInput(`.optional-ado:not(.print-only) [data-setting="${field}"]`, value)
+    const expectedAdo = renderPrompt(publicationPrompt(locale, true), { ...settings, ...values })
+    await click(`${ado}.querySelector('.prompt-toolbar button')`)
+    assert.equal(await evaluate('window.__copied'), expectedAdo)
+    await check(`${tag} promoted publication scopes planning team and waits for batch approval`, `${ado}.querySelector('.prompt-block code').textContent.includes('squad="planning"') && ${ado}.textContent.includes(${JSON.stringify(ot('preview'))})`)
+    for (const width of [320, 390]) {
+      await call('Emulation.setDeviceMetricsOverride', { width, height: 844, deviceScaleFactor: 1, mobile: true })
+      await check(`${tag} optional form no horizontal overflow at ${width}`, 'document.documentElement.scrollWidth<=innerWidth+1')
+    }
+    await evaluate(`${ado}.querySelector('.repo-layout').scrollIntoView({behavior:'instant',block:'start'})`)
+    await screenshot(`onepoint-optional-${locale}-${experience}`)
+    await call('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+    await call('Emulation.setEmulatedMedia', { media: 'print' })
+    await check(`${tag} print includes optional page and exact targeted implementation`, `document.querySelector('.optional-ado.print-only').getBoundingClientRect().height>0 && document.querySelector('.optional-ado.print-only').textContent.includes(${JSON.stringify(ot('optionalProgress'))}) && [...document.querySelectorAll('.lesson.print-only .phase-launch code')].some(code=>code.textContent===${JSON.stringify(expected)})`)
+    await call('Emulation.setEmulatedMedia', { media: '' })
+    await evaluate(`${ado}.querySelector('h1').scrollIntoView({behavior:'instant',block:'start'})`)
+    await screenshot(`onepoint-optional-desktop-${locale}-${experience}`)
+    await setInput('.optional-ado:not(.print-only) [data-setting="organization"]', '')
+    await go('implementation')
+    await check(`${tag} removing ADO destination cannot relock implementation`, `!${visibleLesson}.querySelector('.phase-launch button').disabled`)
+    await setInput('article.lesson:not(.print-only) [data-setting="implementationSquad"]', '')
+    await check(`${tag} clearing squad relocks implementation without removing setup`, `${visibleLesson}.querySelector('.phase-launch button').disabled && JSON.parse(localStorage.getItem(${JSON.stringify(storageKey)})).checked.includes('setup:delivery-team')`)
+    await seed({ ...settings, implementationSquad: 'delivery' }, allCoreChecks)
+    await go('ado')
+    await evaluate(`[...${ado}.querySelectorAll('.check-row input')].forEach(input=>input.click())`)
+    await sleep(100)
+    await check(`${tag} optional checks neither exceed nor reduce 100 percent`, `document.querySelector('progress').value===25 && document.querySelector('progress').max===25 && document.querySelector('.progress-box span').textContent==='100%'`)
+    await go('overview')
+    await check(`${tag} optional branch does not change completed prework CTA`, `document.querySelector('.hero-actions .primary').getAttribute('href')==='#product'`)
+  }
+  await call('Page.navigate', { url: pathToFileURL(resolve(root, 'onepoint-workshop-portable.html')).href + '?lang=fr#ado' })
+  await waitFor(() => evaluate(`!!${ado}`), 'portable optional page')
+  await check('Portable French optional branch works without destinations', `${ado}.querySelector('h1').textContent===${JSON.stringify(optionalText('fr')('title'))} && ${ado}.querySelector('.prompt-toolbar button').disabled && !!${ado}.querySelector('a[href="#implementation"]')`)
   assert.deepEqual(exceptions, [])
   assert.ok(requests.filter(request => /^https?:/.test(request)).every(request => request.startsWith(origin + '/')))
   results.push('No JavaScript exceptions or external application requests')

@@ -32,6 +32,21 @@ et consignez l’écart ; n’ajoutez pas d’installation en direct.
 la reprise. Ne consommez pas les trente minutes de discussion finale.
 
 CHOIX DU CLIENT
+Parcours facultatif après la revue du backlog local : ouvrez #ado dans le guide.
+Certains participants peuvent publier dans Azure DevOps pendant que d’autres
+avancent vers la fédération et l’implémentation. La publication n’ajoute ni
+progression obligatoire ni créneau fixe. Une publication ignorée ou bloquée
+n’empêche pas la suite ; le backlog local revu reste l’entrée de réalisation.
+Convenez des responsabilités et préfixes avant de partager un dépôt ou un outil.
+Prévisualisez et approuvez explicitement le lot avant écriture ; conservez
+identifiants/liens réels, doublons constatés et opérations partiellement réussies.
+
+Dans Premier incrément et preuves, saisissez le nom exact de l’équipe de réalisation.
+App/CLI : mode="autopilot" squad="nom-enregistre" puis la demande complète.
+VS Code : /squad-federation mode="autopilot" squad="nom-enregistre" request="..."
+Le nom ci-dessus est illustratif uniquement. Copier reste bloqué tant que le
+nom réel et les confirmations d’initialisation manquent. Aucune publication ADO requise.
+
 App/CLI : choisissez Squad Coordinator via la liste des agents de l’App ou
 /agent dans le CLI ; ajoutez mode="autopilot" et une ligne vide avant toute
 demande simple sauf init/promote, qui restent inchangés. Pour VS Code, préparez
@@ -51,7 +66,8 @@ promote et init de fédération sont des drapeaux, pas des valeurs de mode.
 Tous les clients exigent exactement mode="autopilot" pour toute demande hors
 cycle de vie, dont vérification, produit, implémentation et reprise en lecture seule.
 VS Code : /squad mode="autopilot" request="..." pour vérification/produit ;
-/squad-federation mode="autopilot" request="..." pour implémentation/reprise.
+/squad-federation mode="autopilot" squad="nom-enregistre" request="..." pour l’implémentation ;
+/squad-federation mode="autopilot" request="..." pour la reprise.
 Exceptions : /squad request="..." pour initialisation de planification ;
 /squad-federation promote request="..." et
 /squad-federation init request="..." pour le cycle de vie de fédération.
